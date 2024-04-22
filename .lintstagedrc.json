@@ -1,3 +1,0 @@
-{
-  "gatsby-theme-oi-wiki/src/**/*.{js,jsx,ts,tsx}": "eslint --fix"
-}
