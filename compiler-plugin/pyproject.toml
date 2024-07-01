@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "python_markdown_mark_words_compiler_plugin"
+version = "0.0.1"
+authors = [
+    {name = "HikariLan", email = "hikarilan@minecraft.kim"},
+]
+description = "A Python-Markdown compiler plugin that put markdown words offset to the output HTML."
+license = {text = "Apache-2.0"}
+dependencies = [
+  "markdown"  
+]
+
+[project.entry-points."markdown.extensions"]
+mark-words = "python_markdown_mark_words_compiler_plugin.extension:MarkWordsExtension"
