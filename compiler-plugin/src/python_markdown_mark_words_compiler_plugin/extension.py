@@ -37,7 +37,7 @@ class CalculateDocumentOffsetPreprocessor(Preprocessor):
             store = (line, offset, offset + len(line))
             self.meta["document_offsets"].append(store)
             self.meta["used_document_offsets"][store] = False
-            ## plus 1 is for the newline character (\n), use the CRLF file is unknown behavior
+            # plus 1 is for the newline character (\n), use the CRLF file is unknown behavior
             offset += len(line) + 1
         return lines
 
@@ -52,7 +52,7 @@ class MarkWordsBlockProcessor(BlockProcessor):
         self.meta = meta
 
     def test(self, parent, block):
-        ## Test if there is any line in the block
+        # Test if there is any line in the block
         for line in [line for (line, _, _) in self.meta["document_offsets"]]:
             if line in block:
                 return True

@@ -1,64 +1,122 @@
+import textwrap
+import unittest
 import markdown
 from html.parser import HTMLParser
 
-test_cases = {
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent vel nulla ac diam dignissim congue ut sed ligula. Pellentesque aliquet ante sit amet risus iaculis, eget tincidunt nibh volutpat. Etiam non pulvinar enim. Mauris viverra augue urna, non aliquam ligula sodales in. Duis mattis ligula pretium dui bibendum, nec tincidunt neque placerat. Pellentesque eu est malesuada, dictum nulla quis, facilisis lectus. Fusce tempor mi ac tellus dictum porta. Cras venenatis pulvinar turpis. Suspendisse consequat nulla suscipit sagittis pretium.": (
-        0,
-        544,
-    ),
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin sed lacus vitae neque vestibulum porttitor id et urna. Quisque nisl nisi, fermentum at justo quis, varius aliquet lorem. Ut fringilla vel purus et fermentum. Mauris ac lacinia nisi, sed ultricies dolor. Nunc ut augue quis eros iaculis tempor vel eu erat. Vestibulum efficitur porta justo. Fusce cursus magna dui, eget posuere neque tristique id. Suspendisse varius mauris arcu, nec congue metus efficitur in. Etiam ac pretium justo. Proin non ante faucibus, mattis mi et, consectetur sapien. Proin feugiat commodo euismod.": (
-        546,
-        1131,
-    ),
-    "Morbi neque lectus, faucibus a mattis at, aliquam quis est. Maecenas sed luctus elit. Nam vel consequat magna, ac dictum velit. Quisque non cursus enim, at ullamcorper massa. Integer quam mauris, scelerisque eu luctus et, facilisis nec ante. Proin feugiat vehicula felis at ornare. Maecenas est risus, tempus sit amet fermentum vel, sagittis in tellus. Integer ultrices velit at nulla tincidunt cursus. Curabitur non nunc in erat imperdiet imperdiet id sed felis. Quisque euismod velit a mi pellentesque, sit amet molestie eros dignissim. Morbi tincidunt dui vitae orci viverra, vitae gravida sapien semper. Pellentesque viverra a turpis blandit ornare. Quisque tincidunt quam a est facilisis, a fringilla augue sollicitudin. Pellentesque et eros sed arcu placerat sollicitudin. Donec diam eros, auctor non risus eu, interdum interdum mi.": (
-        1133,
-        1971,
-    ),
-}
 
-test_document = """Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent vel nulla ac diam dignissim congue ut sed ligula. Pellentesque aliquet ante sit amet risus iaculis, eget tincidunt nibh volutpat. Etiam non pulvinar enim. Mauris viverra augue urna, non aliquam ligula sodales in. Duis mattis ligula pretium dui bibendum, nec tincidunt neque placerat. Pellentesque eu est malesuada, dictum nulla quis, facilisis lectus. Fusce tempor mi ac tellus dictum porta. Cras venenatis pulvinar turpis. Suspendisse consequat nulla suscipit sagittis pretium.
+class Tester:
+    def __init__(self, case, test_case: unittest.TestCase):
+        self.case = case
+        self.result = markdown.markdown(
+            self.case["document"], extensions=["mark-words"]
+        )
+        self.test_case = test_case
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin sed lacus vitae neque vestibulum porttitor id et urna. Quisque nisl nisi, fermentum at justo quis, varius aliquet lorem. Ut fringilla vel purus et fermentum. Mauris ac lacinia nisi, sed ultricies dolor. Nunc ut augue quis eros iaculis tempor vel eu erat. Vestibulum efficitur porta justo. Fusce cursus magna dui, eget posuere neque tristique id. Suspendisse varius mauris arcu, nec congue metus efficitur in. Etiam ac pretium justo. Proin non ante faucibus, mattis mi et, consectetur sapien. Proin feugiat commodo euismod.
-
-Morbi neque lectus, faucibus a mattis at, aliquam quis est. Maecenas sed luctus elit. Nam vel consequat magna, ac dictum velit. Quisque non cursus enim, at ullamcorper massa. Integer quam mauris, scelerisque eu luctus et, facilisis nec ante. Proin feugiat vehicula felis at ornare. Maecenas est risus, tempus sit amet fermentum vel, sagittis in tellus. Integer ultrices velit at nulla tincidunt cursus. Curabitur non nunc in erat imperdiet imperdiet id sed felis. Quisque euismod velit a mi pellentesque, sit amet molestie eros dignissim. Morbi tincidunt dui vitae orci viverra, vitae gravida sapien semper. Pellentesque viverra a turpis blandit ornare. Quisque tincidunt quam a est facilisis, a fringilla augue sollicitudin. Pellentesque et eros sed arcu placerat sollicitudin. Donec diam eros, auctor non risus eu, interdum interdum mi."""
-
-html = markdown.markdown(test_document, extensions=["mark-words"])
+    def test(self):
+        ParserTester(self.case, self.test_case).feed(self.result)
 
 
-class Tester(HTMLParser):
-    start = None
-    end = None
-    data = None
+class ParserTester(HTMLParser):
+    tag = None
+    text = None
+    offset_start = None
+    offset_end = None
+
+    def __init__(self, case, test_case: unittest.TestCase):
+        super().__init__()
+        self.test_case = test_case
+        self.case = case
+        self.idx = 0
 
     def handle_starttag(self, tag, attrs):
+        self.tag = tag
         for attr in attrs:
             if attr[0] == "data-original-document-start":
-                self.start = int(attr[1])
+                self.offset_start = int(attr[1])
             if attr[0] == "data-original-document-end":
-                self.end = int(attr[1])
+                self.offset_end = int(attr[1])
 
     def handle_data(self, data):
-        self.data = data
-        if self.start is not None and self.end is not None and self.data is not None:
-            self._test()
-            self._reset()
+        self.text = data
+
+    def handle_endtag(self, tag):
+        self._test()
+        self._reset()
 
     def _test(self):
-        if self.start is None or self.end is None or self.data is None:
-            raise AssertionError("Missing data")
-        case = test_cases[self.data]
-        print(f"Testing block offset ({self.start}, {self.end}) == {case}")
-        if self.start != case[0] or self.end != case[1]:
-            raise AssertionError(
-                f"Block offset test failed, expected ({case[0]}, {case[1]}), got ({self.start}, {self.end})"
-            )
+        self.test_case.assertEqual(
+            self.tag,
+            self.case["expected"][self.idx]["tag"],
+            msg="Tag mismatch in index " + str(self.idx),
+        )
+        self.test_case.assertEqual(
+            self.text,
+            self.case["expected"][self.idx]["text"],
+            msg="Text mismatch in index " + str(self.idx),
+        )
+        self.test_case.assertEqual(
+            self.offset_start,
+            self.case["expected"][self.idx]["offset"][0],
+            msg="Offset start mismatch in index " + str(self.idx),
+        )
+        self.test_case.assertEqual(
+            self.offset_end,
+            self.case["expected"][self.idx]["offset"][1],
+            msg="Offset end mismatch in index " + str(self.idx),
+        )
+        self.idx += 1
 
     def _reset(self):
-        self.start = None
-        self.end = None
-        self.data = None
+        self.tag = None
+        self.text = None
+        self.offset_start = None
+        self.offset_end = None
 
 
-Tester().feed(html)
+class TestParser(unittest.TestCase):
+    def test_normal(self):
+        case = {
+            "document": textwrap.dedent("""\
+                    # Lorem ipsum
+                    
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin sed lacus vitae neque vestibulum porttitor id et urna.
+                    
+                    ## Morbi neque lectus
+                    
+                    Morbi neque lectus, faucibus a mattis at, aliquam quis est. Maecenas sed luctus elit."""),
+            "expected": [
+                {"tag": "h1", "text": "Lorem ipsum", "offset": (0, 13)},
+                {
+                    "tag": "p",
+                    "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin sed lacus vitae neque vestibulum porttitor id et urna.",
+                    "offset": (15, 132),
+                },
+                {"tag": "h2", "text": "Morbi neque lectus", "offset": (134, 155)},
+                {
+                    "tag": "p",
+                    "text": "Morbi neque lectus, faucibus a mattis at, aliquam quis est. Maecenas sed luctus elit.",
+                    "offset": (157, 242),
+                },
+            ],
+        }
+        Tester(case, self).test()
 
-print("All tests passed!")
+    def test_empty(self):
+        case = {
+            "document": "",
+            "expected": [],
+        }
+        Tester(case, self).test()
+
+    def test_single(self):
+        case = {
+            "document": "Lorem ipsum",
+            "expected": [
+                {"tag": "p", "text": "Lorem ipsum", "offset": (0, 11)},
+            ],
+        }
+        Tester(case, self).test()
+
+
+if __name__ == "__main__":
+    unittest.main()
