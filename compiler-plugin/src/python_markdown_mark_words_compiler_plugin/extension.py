@@ -5,27 +5,27 @@ import xml.etree.ElementTree as etree
 
 MARK_PREVENT_RECURSION = "\t\t\t\r\r\rMARK_PREVENT_RECURSION\r\r\r\t\t\t"
 
+
 class MarkWordsExtension(Extension):
     def extendMarkdown(self, md):
-        meta = {
-            "document_offsets": [],
-            "used_document_offsets": {}
-        }
-        md.preprocessors.register(CalculateDocumentOffsetPreprocessor(md, meta),
-                                   'capture_document', 
-                                   1000) # Highest priority is required because we need to calc words offset from original document
-        md.parser.blockprocessors.register(MarkWordsBlockProcessor(md.parser, meta), 
-                                           'mark_words',
-                                           100) # high priority, usually larger than every other block processor
+        meta = {"document_offsets": [], "used_document_offsets": {}}
+        md.preprocessors.register(
+            CalculateDocumentOffsetPreprocessor(md, meta), "capture_document", 1000
+        )  # Highest priority is required because we need to calc words offset from original document
+        md.parser.blockprocessors.register(
+            MarkWordsBlockProcessor(md.parser, meta), "mark_words", 100
+        )  # high priority, usually larger than every other block processor
 
-'''
-A preprocessor to calculate the offset of each line in the document
-'''
+
 class CalculateDocumentOffsetPreprocessor(Preprocessor):
+    """
+    A preprocessor to calculate the offset of each line in the document
+    """
+
     def __init__(self, md, meta):
         super(CalculateDocumentOffsetPreprocessor, self).__init__(md)
         self.meta = meta
-    
+
     def run(self, lines):
         offset = 0
         for line_num, line in enumerate(lines):
@@ -38,39 +38,41 @@ class CalculateDocumentOffsetPreprocessor(Preprocessor):
             self.meta["document_offsets"].append(store)
             self.meta["used_document_offsets"][store] = False
             ## plus 1 is for the newline character (\n), use the CRLF file is unknown behavior
-            offset += (len(line) + 1)
+            offset += len(line) + 1
         return lines
 
-'''
-A block processor to mark the words in the document and inject the offset of the block to the HTML element
-'''
+
 class MarkWordsBlockProcessor(BlockProcessor):
+    """
+    A block processor to mark the words in the document and inject the offset of the block to the HTML element
+    """
+
     def __init__(self, parser, meta):
         super(MarkWordsBlockProcessor, self).__init__(parser)
         self.meta = meta
-    
+
     def test(self, parent, block):
         ## Test if there is any line in the block
         for line in [line for (line, _, _) in self.meta["document_offsets"]]:
             if line in block:
                 return True
         return False
-    
+
     def run(self, parent: etree.Element, blocks):
         block = blocks[0]
-        
+
         # If the first block is handled, remove the marker and return, so that other block processors can process it
         if MARK_PREVENT_RECURSION in blocks[0]:
             blocks[0] = blocks[0].replace(MARK_PREVENT_RECURSION, "")
             return False
-        
+
         start = None
         end = None
         used = {}
         # Search for the block fragment in the document_offsets
         for store in self.meta["document_offsets"]:
             # If already used, skip
-            if(self.meta["used_document_offsets"][store]):
+            if self.meta["used_document_offsets"][store]:
                 continue
             (line, offset, end_offset) = store
             # If found one
