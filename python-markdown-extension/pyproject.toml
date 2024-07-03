@@ -1,5 +1,5 @@
 [project]
-name = "python_markdown_mark_words_compiler_plugin"
+name = "python_markdown_document_offsets_injection_extension"
 version = "0.0.1"
 description = "A Python-Markdown compiler plugin that put markdown words offset to the output HTML."
 authors = [{ name = "HikariLan", email = "hikarilan@minecraft.kim" }]
@@ -19,10 +19,10 @@ dev-dependencies = []
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/python_markdown_mark_words_compiler_plugin"]
+packages = ["src/python_markdown_document_offsets_injection_extension"]
 
 [tool.rye.scripts]
 test = "python ./test"
 
 [project.entry-points."markdown.extensions"]
-mark-words = "python_markdown_mark_words_compiler_plugin.extension:MarkWordsExtension"
+document-offsets-injection = "python_markdown_document_offsets_injection_extension.extension:MainExtension"

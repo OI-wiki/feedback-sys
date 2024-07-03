@@ -6,14 +6,14 @@ import xml.etree.ElementTree as etree
 MARK_PREVENT_RECURSION = "\t\t\t\r\r\rMARK_PREVENT_RECURSION\r\r\r\t\t\t"
 
 
-class MarkWordsExtension(Extension):
+class MainExtension(Extension):
     def extendMarkdown(self, md):
         meta = {"document_offsets": [], "used_document_offsets": {}}
         md.preprocessors.register(
             CalculateDocumentOffsetPreprocessor(md, meta), "capture_document", 1000
         )  # Highest priority is required because we need to calc words offset from original document
         md.parser.blockprocessors.register(
-            MarkWordsBlockProcessor(md.parser, meta), "mark_words", 100
+            OffsetsInjectionBlockProcessor(md.parser, meta), "mark_words", 100
         )  # high priority, usually larger than every other block processor
 
 
@@ -42,13 +42,13 @@ class CalculateDocumentOffsetPreprocessor(Preprocessor):
         return lines
 
 
-class MarkWordsBlockProcessor(BlockProcessor):
+class OffsetsInjectionBlockProcessor(BlockProcessor):
     """
     A block processor to mark the words in the document and inject the offset of the block to the HTML element
     """
 
     def __init__(self, parser, meta):
-        super(MarkWordsBlockProcessor, self).__init__(parser)
+        super(OffsetsInjectionBlockProcessor, self).__init__(parser)
         self.meta = meta
 
     def test(self, parent, block):

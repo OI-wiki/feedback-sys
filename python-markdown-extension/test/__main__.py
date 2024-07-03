@@ -8,7 +8,7 @@ class Tester:
     def __init__(self, case, test_case: unittest.TestCase):
         self.case = case
         self.result = markdown.markdown(
-            self.case["document"], extensions=["mark-words"]
+            self.case["document"], extensions=["document-offsets-injection"]
         )
         self.test_case = test_case
 
