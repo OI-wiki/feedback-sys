@@ -1,0 +1,46 @@
+name: Check PR Format and Test for python-markdown-extension
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - python-markdown-extension/**
+
+jobs:
+  check-format:
+    name: Check PR Format
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./python-markdown-extension
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout Repo
+      - uses: eifinger/setup-rye@v3
+        name: Setup Rye
+        with:
+          enable-cache: true
+          working-directory: python-markdown-extension
+      - run: rye sync
+        name: Install Dependencies
+      - run: rye fmt --check
+        name: Check Format
+  test:
+    name: Test PR
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./python-markdown-extension
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout Repo
+      - uses: eifinger/setup-rye@v3
+        name: Setup Rye
+        with:
+          enable-cache: true
+          working-directory: python-markdown-extension
+      - run: rye sync
+        name: Install Dependencies
+      - run: rye run test
+        name: Run Tests
