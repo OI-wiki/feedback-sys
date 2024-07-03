@@ -10,4 +10,9 @@
 
 -e file:.
 markdown==3.6
+    # via pymdown-extensions
     # via python-markdown-document-offsets-injection-extension
+pygments==2.18.0
+pymdown-extensions==10.8.1
+pyyaml==6.0.1
+    # via pymdown-extensions

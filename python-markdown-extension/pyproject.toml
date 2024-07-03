@@ -4,7 +4,9 @@ version = "0.0.1"
 description = "A Python-Markdown compiler plugin that put markdown words offset to the output HTML."
 authors = [{ name = "HikariLan", email = "hikarilan@minecraft.kim" }]
 license = { text = "Apache-2.0" }
-dependencies = ["markdown>=3.6"]
+dependencies = [
+    "markdown>=3.6",
+]
 requires-python = ">= 3.8"
 
 [build-system]
@@ -13,7 +15,10 @@ build-backend = "hatchling.build"
 
 [tool.rye]
 managed = true
-dev-dependencies = []
+dev-dependencies = [
+    "pygments>=2.18.0",
+    "pymdown-extensions>=10.8.1",
+]
 
 [tool.hatch.metadata]
 allow-direct-references = true
