@@ -112,8 +112,6 @@ class Tester:
                 },
             },
         )
-        print(self.case["document"])
-        print(self.result)
         self.test_case = test_case
 
     def test(self):
@@ -190,11 +188,11 @@ class TestParser(unittest.TestCase):
         case = {
             "document": textwrap.dedent("""\
                     # Lorem ipsum
-                    
+
                     Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin sed lacus vitae neque vestibulum porttitor id et urna.
-                    
+
                     ## Morbi neque lectus
-                    
+
                     Morbi neque lectus, faucibus a mattis at, aliquam quis est. Maecenas sed luctus elit."""),
             "expected": [
                 {"tag": "h1", "offset": (0, 13)},
@@ -277,32 +275,30 @@ class TestParser(unittest.TestCase):
                 },
                 {
                     "tag": "p",
-                    "offset": (780, 844),
+                    "offset": (780, 1101),  # FIXME: Correct one is (780, 1101)
                 },
-                # there's a div tag and a script tag in the document, and they will not be considered.
             ],
         }
         Tester(case, self).test()
 
     def test_oi_wiki_search_dfs(self):
         case = {
-            # I HATE TEXT BLOCKS
             "document": textwrap.dedent("""\
                 ## 引入
-                
+
                 DFS 为图论中的概念，详见 [DFS（图论）](../graph/dfs.md) 页面。在 **搜索算法** 中，该词常常指利用递归函数方便地实现暴力枚举的算法，与图论中的 DFS 算法有一定相似之处，但并不完全相同。
-                
+
                 ## 解释
-                
+
                 考虑这个例子：
-                
+
                 ???+ note "例题"
                     把正整数 $n$ 分解为 $3$ 个不同的正整数，如 $6=1+2+3$，排在后面的数必须大于等于前面的数，输出所有方案。
-                
+
                 对于这个问题，如果不知道搜索，应该怎么办呢？
-                
+
                 当然是三重循环，参考代码如下：
-                
+
                 ???+ note "实现"
                     === "C++"
                         ```cpp
@@ -311,7 +307,7 @@ class TestParser(unittest.TestCase):
                             for (int k = j; k <= n; ++k)
                               if (i + j + k == n) printf("%d = %d + %d + %d\\n", n, i, j, k);
                         ```
-                    
+
                     === "Python"
                         ```python
                         for i in range(1, n + 1):
@@ -320,7 +316,7 @@ class TestParser(unittest.TestCase):
                                     if i + j + k == n:
                                         print("%d = %d + %d + %d" % (n, i, j, k))
                         ```
-                    
+
                     === "Java"
                         ```Java
                         for (int i = 1; i < n + 1; i++) {
@@ -331,7 +327,7 @@ class TestParser(unittest.TestCase):
                             }
                         }
                         ```
-                
+
                 那如果是分解成四个整数呢？再加一重循环？"""),
             "expected": [
                 {
@@ -350,7 +346,10 @@ class TestParser(unittest.TestCase):
                     "tag": "p",
                     "offset": (126, 133),
                 },
-                # <details class="note" open="open"> has been ignored
+                {
+                    "tag": "details",
+                    "offset": (135, 215),
+                },
                 {
                     "tag": "p",
                     "offset": (217, 239),
@@ -359,7 +358,10 @@ class TestParser(unittest.TestCase):
                     "tag": "p",
                     "offset": (241, 256),
                 },
-                # <details class="note" open="open"> has been ignored
+                {
+                    "tag": "details",
+                    "offset": (258, 1092),
+                },
                 {
                     "tag": "p",
                     "offset": (1094, 1114),
