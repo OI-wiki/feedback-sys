@@ -31,3 +31,5 @@ jobs:
         name: Build Package
       - uses: pypa/gh-action-pypi-publish@release/v1
         name: Publish package distributions to PyPI
+        with:
+          packages-dir: python-markdown-extension/dist/
