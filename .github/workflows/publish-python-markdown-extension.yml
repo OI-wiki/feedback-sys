@@ -1,0 +1,27 @@
+name: Publish python-markdown-extension to Pypi
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - python-markdown-extension/**
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./python-markdown-extension
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout Repo
+      - uses: eifinger/setup-rye@v3
+        name: Setup Rye
+        with:
+          enable-cache: true
+          working-directory: python-markdown-extension
+      - run: rye sync
+        name: Install Dependencies
+      - run: rye publish --yes
