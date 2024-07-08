@@ -236,6 +236,9 @@ class OffsetsInjectionBlockProcessor(BlockProcessor):
             # append MARK_PREVENT_RECURSION to tail of the block to prevent recursion, we don't use a handled
             # flaglist because we don't know if there's some same block in the document
             self.parser.parseBlocks(parent, [block + MARK_PREVENT_RECURSION])
+            # fix offset index out of range
+            if len(parent) == 0:
+                return True
             # fix multi blocks in same parents
             if self.meta["last_parent"] == parent[-1]:
                 parent[-1].set("data-original-document-end", str(end))
