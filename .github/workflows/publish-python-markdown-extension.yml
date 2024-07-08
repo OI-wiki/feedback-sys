@@ -33,3 +33,27 @@ jobs:
         name: Publish package distributions to PyPI
         with:
           packages-dir: python-markdown-extension/dist/
+  upload-artifacts:
+    name: Upload Artifacts
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./python-markdown-extension
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout Repo
+      - uses: eifinger/setup-rye@v3
+        name: Setup Rye
+        with:
+          enable-cache: true
+          working-directory: python-markdown-extension
+      - run: rye sync
+        name: Install Dependencies
+      - run: rye build
+        name: Build Package
+      - uses: actions/upload-artifact@v2
+        with:
+          name: python-markdown-extension
+          path: python-markdown-extension/dist/
