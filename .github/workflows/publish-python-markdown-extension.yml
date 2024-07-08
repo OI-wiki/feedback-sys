@@ -12,6 +12,7 @@ jobs:
   publish:
     name: Publish
     runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
     defaults:
       run:
         working-directory: ./python-markdown-extension
