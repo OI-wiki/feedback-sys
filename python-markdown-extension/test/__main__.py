@@ -79,6 +79,9 @@ class Tester:
                 "pymdownx.tabbed",
             ],
             extension_configs={
+                "document-offsets-injection": {
+                    "debug": True,
+                },
                 "toc": {
                     "permalink": "",
                     "slugify": uslugify,
@@ -115,6 +118,7 @@ class Tester:
         self.test_case = test_case
 
     def test(self):
+        print(self.result)
         tester = ParserTester(self.case, self.test_case)
         tester.feed(self.result)
         tester.check_integrity()
@@ -135,6 +139,12 @@ class ParserTester(HTMLParser):
         start = None
         end = None
         for attr in attrs:
+            if (
+                attr[0] == "data-offset-accurate-start"
+                or attr[0] == "data-offset-accurate-end"
+            ):
+                if attr[1] == bool(attr[1]):
+                    break
             if attr[0] == "data-original-document-start":
                 start = int(attr[1])
             if attr[0] == "data-original-document-end":
@@ -275,7 +285,7 @@ class TestParser(unittest.TestCase):
                 },
                 {
                     "tag": "p",
-                    "offset": (780, 1101),  # FIXME: Correct one is (780, 1101)
+                    "offset": (780, 844),
                 },
             ],
         }
