@@ -2,8 +2,8 @@ name: Publish python-markdown-extension to Pypi
 
 on:
   push:
-    branches:
-      - master
+    tags:
+      - '*'
     paths:
       - python-markdown-extension/**
   workflow_dispatch:
@@ -12,7 +12,6 @@ jobs:
   publish:
     name: Publish
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
     defaults:
       run:
         working-directory: ./python-markdown-extension
