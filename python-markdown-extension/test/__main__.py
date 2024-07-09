@@ -143,7 +143,7 @@ class ParserTester(HTMLParser):
                 attr[0] == "data-offset-accurate-start"
                 or attr[0] == "data-offset-accurate-end"
             ):
-                if attr[1] == bool(attr[1]):
+                if not bool(attr[1]):
                     break
             if attr[0] == "data-original-document-start":
                 start = int(attr[1])
