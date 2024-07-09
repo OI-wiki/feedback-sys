@@ -40,6 +40,9 @@ result = markdown.markdown(
         "pymdownx.tabbed",
     ],
     extension_configs={
+        "document-offsets-injection": {
+            "debug": True,
+        },
         "toc": {
             "permalink": "",
             "slugify": uslugify,
