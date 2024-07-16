@@ -60,7 +60,7 @@ export async function getComment(env: Env, req: GetComment): Promise<GetCommentR
 				name: comment.name as string | null,
 			},
 			comment: comment.comment as string,
-            created_time: comment.created_time as string,
+			created_time: comment.created_time as string,
 		};
 	});
 }
