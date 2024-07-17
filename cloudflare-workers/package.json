@@ -7,6 +7,7 @@
 		"dev": "wrangler dev",
 		"start": "wrangler dev",
 		"test": "vitest",
+		"fmt": "prettier --write .",
 		"cf-typegen": "wrangler types",
 		"cf-initdb": "wrangler d1 execute comments --remote --file=schema.sql",
 		"cf-initdb-local": "wrangler d1 execute comments --local --file=schema.sql"
