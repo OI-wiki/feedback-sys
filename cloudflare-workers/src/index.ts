@@ -12,8 +12,9 @@
  */
 
 import { AutoRouter, error } from 'itty-router';
-import { GetCommentBody, GetCommentRespBody, PostCommentBody, ResponseBody } from './types';
-import { getComment, postComment } from './db';
+import { GetCommentBody, GetCommentRespBody, GetCommitHashRespBody, PostCommentBody, PutCommitHashBody, ResponseBody } from './types';
+import { getComment, getMeta, postComment } from './db';
+import { validateSecret, setCommitHash, compareCommitHash } from './administration';
 
 const router = AutoRouter();
 
@@ -28,7 +29,8 @@ router.post('/comment', async (req, env, ctx) => {
 		body.comment == undefined ||
 		body.offset.start == undefined ||
 		body.offset.end == undefined ||
-		body.commenter.name == undefined
+		body.commenter.name == undefined || 
+		body.commit_hash == undefined
 	) {
 		return error(400, 'Invalid request body');
 	}
@@ -49,6 +51,10 @@ router.post('/comment', async (req, env, ctx) => {
 		return error(400, 'Invalid comment');
 	}
 
+	if(!await compareCommitHash(env, body.commit_hash)) {
+		return error(409, 'Commit hash mismatch, usually due to outdated cache or running CI/CD, please retry after a few minutes');
+	}
+
 	await postComment(env, {
 		path: body.path,
 		offset: body.offset,
@@ -62,7 +68,7 @@ router.post('/comment', async (req, env, ctx) => {
 
 	return {
 		status: 200,
-	} as ResponseBody<{}>;
+	} satisfies ResponseBody;
 });
 
 router.get('/comment', async (req, env, ctx) => {
@@ -77,7 +83,41 @@ router.get('/comment', async (req, env, ctx) => {
 	return {
 		status: 200,
 		data: rst,
-	} as ResponseBody<GetCommentRespBody>;
+	} satisfies ResponseBody<GetCommentRespBody>;
+});
+
+router.put('/meta/commithash', async (req, env, ctx) => {
+	const body = await req.json<PutCommitHashBody>();
+
+	if (body == undefined || body.commit_hash == undefined) {
+		return error(400, 'Invalid request body');
+	}
+
+	if (body.commit_hash.length < 1) {
+		return error(400, 'Invalid commit hash');
+	}
+
+	const authorization = req.headers.get('Authorization');
+
+	if (!authorization) {
+		return error(401, 'Unauthorized');
+	}
+
+	const [scheme, secret] = authorization.split(' ');
+
+	if (scheme !== 'Bearer' || !secret) {
+		return error(400, 'Malformed authorization header');
+	}
+
+	if (validateSecret(env, secret) !== true) {
+		return error(401, 'Unauthorized');
+	}
+
+	setCommitHash(env, body.commit_hash);
+
+	return {
+		status: 200,
+	} satisfies ResponseBody;
 });
 
 export default { ...router } satisfies ExportedHandler<Env>;
