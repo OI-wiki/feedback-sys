@@ -28,8 +28,8 @@ export type GetCommentRespBody = {
 		start: number;
 		end: number;
 	};
-	commenter?: {
-		name?: string | null;
+	commenter: {
+		name: string | null;
 	};
 	comment: string;
 	created_time: string;

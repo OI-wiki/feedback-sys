@@ -57,7 +57,7 @@ export async function getComment(env: Env, req: GetComment): Promise<GetCommentR
 				end: comment.end as number,
 			},
 			commenter: {
-				name: comment.name as string | null,
+				name: comment.name as string,
 			},
 			comment: comment.comment as string,
 			created_time: comment.created_time as string,
