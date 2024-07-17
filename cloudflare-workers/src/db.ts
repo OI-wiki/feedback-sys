@@ -52,6 +52,7 @@ export async function getComment(env: Env, req: GetComment): Promise<GetCommentR
 
 	return comments.map((comment) => {
 		return {
+			id: comment.id as number,
 			offset: {
 				start: comment.start as number,
 				end: comment.end as number,

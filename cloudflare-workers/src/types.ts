@@ -26,6 +26,7 @@ export type GetCommentBody = {
 export type GetComment = GetCommentBody;
 
 export type GetCommentRespBody = {
+	id: number;
 	offset: {
 		start: number;
 		end: number;
