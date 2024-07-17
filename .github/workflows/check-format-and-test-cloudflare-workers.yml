@@ -22,7 +22,9 @@ jobs:
         name: Run install
         with:
           cmd: install
+          dir: cloudflare-workers
       - uses: borales/actions-yarn@v5
         name: Check Format
         with:
           cmd: prettier --check .
+          dir: cloudflare-workers
