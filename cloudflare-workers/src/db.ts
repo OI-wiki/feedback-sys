@@ -35,18 +35,12 @@ export async function postComment(env: Env, req: PostComment) {
 export async function getComment(env: Env, req: GetComment): Promise<GetCommentRespBody> {
 	const db = env.DB;
 
-	const page = await db.prepare('SELECT * FROM pages WHERE path = ?').bind(req.path).first();
-
-	if (!page) {
-		return [];
-	}
-
 	const comments = (
 		await db
 			.prepare(
-				'SELECT * FROM comments JOIN commenters ON comments.commenter_id = commenters.id JOIN offsets ON comments.offset_id = offsets.id WHERE offsets.page_id = ?',
+				'SELECT *, comments.id AS id FROM comments JOIN commenters ON comments.commenter_id = commenters.id JOIN offsets ON comments.offset_id = offsets.id JOIN pages ON offsets.page_id = pages.id WHERE pages.path = ?',
 			)
-			.bind(page.id)
+			.bind(req.path)
 			.all()
 	).results;
 
