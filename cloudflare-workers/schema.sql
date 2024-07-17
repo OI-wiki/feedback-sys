@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS `pages` (
     `id` INTEGER PRIMARY KEY AUTOINCREMENT,
     `path` TEXT UNIQUE NOT NULL
 );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_path ON `pages`(`path`);
 
 CREATE TABLE IF NOT EXISTS `offsets` (
     `id` INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -15,7 +16,8 @@ CREATE TABLE IF NOT EXISTS `offsets` (
     `end` INTEGER NOT NULL,
     FOREIGN KEY(`page_id`) REFERENCES `pages`(`id`)
 );
-CREATE INDEX idx_offsets ON `offsets`(`start`, `end`);
+CREATE INDEX IF NOT EXISTS idx_offsets ON `offsets`(`start`, `end`);
+CREATE INDEX IF NOT EXISTS idx_page_id ON `offsets`(`page_id`);
 
 CREATE TABLE IF NOT EXISTS `commenters`(
     `id` INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -33,3 +35,5 @@ CREATE TABLE IF NOT EXISTS `comments` (
     FOREIGN KEY(`offset_id`) REFERENCES `offsets`(`id`),
     FOREIGN KEY(`commenter_id`) REFERENCES `commenters`(`id`)
 );
+CREATE INDEX IF NOT EXISTS idx_offset_id ON `comments`(`offset_id`);
+CREATE INDEX IF NOT EXISTS idx_commenter_id ON `comments`(`commenter_id`);
