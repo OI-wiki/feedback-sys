@@ -1,0 +1,54 @@
+name: Deploy cloudflare-workers to Workers
+
+on:
+  push:
+    tags:
+      - "*"
+    paths:
+      - cloudflare-workers/**
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./cloudflare-workers
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout Repo
+      - uses: actions/setup-node@v4
+        name: Set Node.js 20.x
+        with:
+          node-version: 20.x
+      - uses: borales/actions-yarn@v5
+        name: Run install
+        with:
+          cmd: install
+          dir: cloudflare-workers
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          workingDirectory: "cloudflare-workers"
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          secrets: |
+            ADMINISTRATOR_SECRET
+        env:
+          ADMINISTRATOR_SECRET: ${{ secrets.ADMINISTRATOR_SECRET }}
+  upload-artifacts:
+    name: Upload Artifacts
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./cloudflare-workers
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout Repo
+      - uses: actions/upload-artifact@v2
+        with:
+          name: cloudflare-workers
+          path: cloudflare-workers
