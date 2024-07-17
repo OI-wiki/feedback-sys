@@ -78,3 +78,9 @@ export async function getMeta(env: Env, key: string): Promise<string | undefined
 
 	return meta?.value;
 }
+
+export async function getPaths(env: Env): Promise<string[]> {
+	const db = env.DB;
+
+	return (await db.prepare('SELECT path FROM pages').all()).results.map((page) => page.path as string);
+}

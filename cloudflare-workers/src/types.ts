@@ -1,5 +1,4 @@
 export type PostCommentBody = {
-	path: string;
 	offset: {
 		start: number;
 		end: number;
@@ -16,7 +15,9 @@ export type PostComment = {
 		user_agent: string;
 		ip_address: string | null;
 	};
-} & Omit<PostCommentBody, 'commit_hash'>;
+} & Omit<PostCommentBody, 'commit_hash'> & {
+		path: string;
+	};
 
 export type GetCommentBody = {
 	path: string;
