@@ -12,18 +12,30 @@
  */
 
 import { AutoRouter, error } from 'itty-router';
-import { GetCommentBody, GetCommentRespBody, GetCommitHashRespBody, PostCommentBody, PutCommitHashBody, ResponseBody } from './types';
-import { getComment, getMeta, postComment } from './db';
+import { GetCommentBody, GetCommentRespBody, PostCommentBody, PutCommitHashBody, ResponseBody } from './types';
+import { getComment, postComment } from './db';
 import { validateSecret, setCommitHash, compareCommitHash } from './administration';
+import { matchCommentCache, purgeAllCommentCache, purgeCommentCache, putCommentCache } from './cache';
 
 const router = AutoRouter();
 
-router.post('/comment', async (req, env, ctx) => {
+router.post('/comment/:path', async (req, env, ctx) => {
+	const params = req.params as GetCommentBody;
+
+	if (params == undefined || params.path == undefined) {
+		return error(400, 'Invalid request body');
+	}
+
+	params.path = decodeURIComponent(params.path);
+
+	if (!params.path.startsWith('/')) {
+		return error(400, 'Invalid path');
+	}
+
 	const body = await req.json<PostCommentBody>();
 
 	if (
 		body == undefined ||
-		body.path == undefined ||
 		body.offset == undefined ||
 		body.commenter == undefined ||
 		body.comment == undefined ||
@@ -33,10 +45,6 @@ router.post('/comment', async (req, env, ctx) => {
 		body.commit_hash == undefined
 	) {
 		return error(400, 'Invalid request body');
-	}
-
-	if (!body.path.startsWith('/')) {
-		return error(400, 'Invalid path');
 	}
 
 	if (body.offset.start < 0 || body.offset.end < 0 || body.offset.start >= body.offset.end) {
@@ -56,7 +64,7 @@ router.post('/comment', async (req, env, ctx) => {
 	}
 
 	await postComment(env, {
-		path: body.path,
+		path: params.path,
 		offset: body.offset,
 		commenter: {
 			name: body.commenter.name,
@@ -65,6 +73,9 @@ router.post('/comment', async (req, env, ctx) => {
 		},
 		comment: body.comment,
 	});
+
+	const cache = caches.default;
+	ctx.waitUntil(purgeCommentCache(env, cache, new URL(req.url).origin, params.path));
 
 	return {
 		status: 200,
@@ -80,12 +91,25 @@ router.get('/comment/:path', async (req, env, ctx) => {
 
 	params.path = decodeURIComponent(params.path);
 
-	const rst = await getComment(env, params);
+	const cache = caches.default;
+	let resp = await matchCommentCache(env, cache, new URL(req.url).origin, params.path);
 
-	return {
-		status: 200,
-		data: rst,
-	} satisfies ResponseBody<GetCommentRespBody>;
+	if (!resp) {
+		resp = new Response(
+			JSON.stringify({
+				status: 200,
+				data: await getComment(env, params),
+			} satisfies ResponseBody<GetCommentRespBody>),
+			{
+				headers: {
+					'Content-Type': 'application/json',
+				},
+			},
+		);
+		ctx.waitUntil(putCommentCache(env, cache, new URL(req.url).origin, params.path, resp.clone()));
+	}
+
+	return resp;
 });
 
 router.put('/meta/commithash', async (req, env, ctx) => {
@@ -116,6 +140,31 @@ router.put('/meta/commithash', async (req, env, ctx) => {
 	}
 
 	setCommitHash(env, body.commit_hash);
+
+	return {
+		status: 200,
+	} satisfies ResponseBody;
+});
+
+router.delete('/cache', async (req, env, ctx) => {
+	const authorization = req.headers.get('Authorization');
+
+	if (!authorization) {
+		return error(401, 'Unauthorized');
+	}
+
+	const [scheme, secret] = authorization.split(' ');
+
+	if (scheme !== 'Bearer' || !secret) {
+		return error(400, 'Malformed authorization header');
+	}
+
+	if (validateSecret(env, secret) !== true) {
+		return error(401, 'Unauthorized');
+	}
+
+	const cache = caches.default;
+	await purgeAllCommentCache(env, cache, new URL(req.url).origin);
 
 	return {
 		status: 200,
