@@ -71,14 +71,16 @@ router.post('/comment', async (req, env, ctx) => {
 	} satisfies ResponseBody;
 });
 
-router.get('/comment', async (req, env, ctx) => {
-	const query = req.query as GetCommentBody;
+router.get('/comment/:path', async (req, env, ctx) => {
+	const params = req.params as GetCommentBody;
 
-	if (query == undefined || query.path == undefined) {
+	if (params == undefined || params.path == undefined) {
 		return error(400, 'Invalid request body');
 	}
 
-	const rst = await getComment(env, query);
+	params.path = decodeURIComponent(params.path);
+
+	const rst = await getComment(env, params);
 
 	return {
 		status: 200,
