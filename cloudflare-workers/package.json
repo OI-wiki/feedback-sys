@@ -8,7 +8,8 @@
 		"start": "wrangler dev",
 		"test": "vitest",
 		"cf-typegen": "wrangler types",
-		"cf-initdb": "wrangler d1 execute comments --remote --file=schema.sql"
+		"cf-initdb": "wrangler d1 execute comments --remote --file=schema.sql",
+		"cf-initdb-local": "wrangler d1 execute comments --local --file=schema.sql"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.4.5",
