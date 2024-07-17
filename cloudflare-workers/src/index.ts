@@ -29,7 +29,7 @@ router.post('/comment', async (req, env, ctx) => {
 		body.comment == undefined ||
 		body.offset.start == undefined ||
 		body.offset.end == undefined ||
-		body.commenter.name == undefined || 
+		body.commenter.name == undefined ||
 		body.commit_hash == undefined
 	) {
 		return error(400, 'Invalid request body');
@@ -51,7 +51,7 @@ router.post('/comment', async (req, env, ctx) => {
 		return error(400, 'Invalid comment');
 	}
 
-	if(!await compareCommitHash(env, body.commit_hash)) {
+	if (!(await compareCommitHash(env, body.commit_hash))) {
 		return error(409, 'Commit hash mismatch, usually due to outdated cache or running CI/CD, please retry after a few minutes');
 	}
 

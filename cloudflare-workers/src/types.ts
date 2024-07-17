@@ -42,7 +42,7 @@ export type PutCommitHashBody = {
 
 export type GetCommitHashRespBody = {
 	commit_hash: string | undefined;
-}
+};
 
 export type ResponseBody<T = {}> = {
 	status: 200;
