@@ -64,3 +64,17 @@ export async function getComment(env: Env, req: GetComment): Promise<GetCommentR
 		};
 	});
 }
+
+export async function setMeta(env: Env, key: string, value: string) {
+	const db = env.DB;
+
+	await db.prepare('INSERT OR REPLACE INTO metas (key, value) VALUES (?, ?)').bind(key, value).run();
+}
+
+export async function getMeta(env: Env, key: string): Promise<string | undefined> {
+	const db = env.DB;
+
+	const meta = await db.prepare('SELECT * FROM metas WHERE key = ?').bind(key).first<Record<'key' | 'value', string>>();
+
+	return meta?.value;
+}

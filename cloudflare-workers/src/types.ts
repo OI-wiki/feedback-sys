@@ -8,6 +8,7 @@ export type PostCommentBody = {
 		name: string;
 	};
 	comment: string;
+	commit_hash: string;
 };
 
 export type PostComment = {
@@ -15,7 +16,7 @@ export type PostComment = {
 		user_agent: string;
 		ip_address: string | null;
 	};
-} & PostCommentBody;
+} & Omit<PostCommentBody, 'commit_hash'>;
 
 export type GetCommentBody = {
 	path: string;
@@ -35,7 +36,15 @@ export type GetCommentRespBody = {
 	created_time: string;
 }[];
 
-export type ResponseBody<T> = {
+export type PutCommitHashBody = {
+	commit_hash: string;
+};
+
+export type GetCommitHashRespBody = {
+	commit_hash: string | undefined;
+}
+
+export type ResponseBody<T = {}> = {
 	status: 200;
-	data: T;
+	data?: T;
 };
