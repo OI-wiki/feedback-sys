@@ -35,6 +35,8 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           secrets: |
             ADMINISTRATOR_SECRET
+          preCommands: |
+            yarn cf-initdb
         env:
           ADMINISTRATOR_SECRET: ${{ secrets.ADMINISTRATOR_SECRET }}
   upload-artifacts:
