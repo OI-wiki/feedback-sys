@@ -49,7 +49,7 @@ jobs:
           secrets: |
             ADMINISTRATOR_SECRET
           preCommands: |
-            yarn cf-initdb
+            wrangler d1 execute comments --yes --file=schema.sql
         env:
           ADMINISTRATOR_SECRET: ${{ secrets.ADMINISTRATOR_SECRET }}
   upload-artifacts:
