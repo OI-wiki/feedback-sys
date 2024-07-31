@@ -1,0 +1,336 @@
+@custom-selector :--review
+  .review_enabled[data-original-document-start][data-original-document-end];
+@custom-media --mobile (width <= 768px);
+
+:root {
+  --review-context-menu-popup-page-x: 0;
+  --review-context-menu-popup-page-y: 0;
+}
+
+:--review {
+  &.review_has_comments {
+    text-decoration: underline;
+    text-decoration-style: dotted;
+  }
+
+  &:hover,
+  &:focus {
+    text-decoration: underline;
+  }
+}
+
+iconify-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+}
+
+#review-context-menu-popup {
+  position: absolute;
+  inset: unset;
+  border: unset;
+  margin: 0;
+  padding: 0;
+
+  top: var(--review-context-menu-popup-page-y);
+  left: var(--review-context-menu-popup-page-x);
+
+  border: 1px solid #d4d4d8;
+  border-radius: 4px;
+  box-shadow: 0 3px 15px #00000026;
+
+  overflow: visible;
+  text-wrap: nowrap;
+
+  & .popup_content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    padding: 10px 0;
+    font-size: 14px;
+    max-width: 276px;
+
+    & .popup_item {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px 10px;
+
+      cursor: pointer;
+
+      &:hover {
+        background-color: lightgray;
+      }
+    }
+  }
+}
+
+#review-context-menu-review {
+  position: fixed;
+
+  inset: unset;
+  border: unset;
+  margin: 0;
+  padding: 0;
+
+  height: 400px;
+  width: 800px;
+
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  border: 1px solid #d4d4d8;
+  border-radius: 4px;
+  box-shadow: 0 3px 15px #00000026;
+
+  &::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  & .popup_inner {
+    display: flex;
+    flex-direction: column;
+
+    height: 100%;
+    width: 100%;
+
+    font-size: 14px;
+
+    & .popup_header {
+      padding: 18px;
+
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      border-width: 0;
+      border-bottom: 1px;
+      border-style: solid;
+      border-color: #d4d4d8;
+
+      #review-content {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        border-width: 0;
+        border-left: 3px;
+        border-style: solid;
+        border-color: #d4d4d8;
+        box-sizing: border-box;
+        padding-left: 14px;
+      }
+    }
+
+    & .popup_content {
+      flex: 1 0 auto;
+
+      display: flex;
+      flex-direction: column;
+
+      gap: 8px;
+
+      padding: 18px;
+
+      #review-input {
+        flex: 1 0 auto;
+
+        resize: none;
+      }
+
+      & .popup_bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+
+        @media (--mobile) {
+          flex-direction: column;
+          align-items: flex-end;
+        }
+
+        #review-username {
+          border: 1px solid;
+        }
+
+        & .popup_actions {
+          display: flex;
+          justify-content: end;
+          align-items: center;
+
+          gap: 6px;
+
+          #review-notification {
+            color: RED;
+          }
+
+          & .popup_item {
+            padding: 8px 14px;
+
+            border: 1px solid #52525b;
+
+            cursor: pointer;
+
+            &.popup_item_primary {
+              background-color: #0070f3;
+            }
+
+            &:hover {
+              filter: brightness(1.2);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+#review-context-menu-comments {
+  position: fixed;
+
+  inset: unset;
+  border: unset;
+  margin: 0;
+  padding: 0;
+
+  height: 100vh;
+  width: 400px;
+
+  top: 0;
+  right: 0;
+
+  @media (--mobile) {
+    width: 100vw;
+  }
+
+  &::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  & .popup_inner {
+    display: flex;
+    flex-direction: column;
+
+    height: 100%;
+    width: 100%;
+
+    font-size: 14px;
+
+    & .popup_header {
+      padding: 18px;
+
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      border-width: 0;
+      border-bottom: 1px;
+      border-style: solid;
+      border-color: #d4d4d8;
+
+      #comments-content {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        border-width: 0;
+        border-left: 3px;
+        border-style: solid;
+        border-color: #d4d4d8;
+        box-sizing: border-box;
+        padding-left: 14px;
+      }
+    }
+
+    & .popup_content {
+      flex: 1 0 auto;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+
+      gap: 8px;
+
+      padding: 18px;
+
+      #user-comments {
+        flex: 1 1 auto;
+
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+
+        overflow-y: auto;
+
+        & .comment_container {
+          display: flex;
+          flex-direction: column;
+
+          border-bottom: 1px solid #d4d4d8;
+
+          & .comment_header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+
+            & .comment_commenter {
+              text-wrap: nowrap;
+              overflow: hidden;
+
+              font-size: 20px;
+            }
+
+            & .comment_time {
+              text-wrap: nowrap;
+              overflow: hidden;
+
+              color: #52525b;
+            }
+          }
+
+          & .comment_content {
+            overflow: hidden;
+            word-wrap: break-word;
+          }
+        }
+      }
+
+      & .popup_bottom {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+
+        @media (--mobile) {
+          flex-direction: column;
+          align-items: flex-end;
+        }
+
+        & .popup_actions {
+          display: flex;
+          justify-content: end;
+          align-items: center;
+
+          gap: 6px;
+
+          & .popup_item {
+            padding: 8px 14px;
+
+            border: 1px solid #52525b;
+
+            cursor: pointer;
+
+            &.popup_item_primary {
+              background-color: #0070f3;
+            }
+
+            &:hover {
+              filter: brightness(1.2);
+            }
+          }
+        }
+      }
+    }
+  }
+}
