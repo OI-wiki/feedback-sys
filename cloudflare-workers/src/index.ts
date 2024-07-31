@@ -11,13 +11,23 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-import { AutoRouter, error } from 'itty-router';
+import { AutoRouter, cors, error } from 'itty-router';
 import { GetCommentBody, GetCommentRespBody, PostCommentBody, PutCommitHashBody, ResponseBody } from './types';
 import { getComment, postComment } from './db';
 import { validateSecret, setCommitHash, compareCommitHash } from './administration';
 import { matchCommentCache, purgeAllCommentCache, purgeCommentCache, putCommentCache } from './cache';
 
-const router = AutoRouter();
+const { preflight, corsify } = cors({
+	origin: 'https://oi-wiki.org',
+	allowMethods: ['GET', 'POST', 'PUT', 'DELETE'],
+	allowHeaders: ['Authorization', 'Content-Type'],
+	maxAge: 86400,
+});
+
+const router = AutoRouter({
+	before: [preflight],
+	finally: [corsify],
+});
 
 router.post('/comment/:path', async (req, env, ctx) => {
 	const params = req.params as GetCommentBody;
