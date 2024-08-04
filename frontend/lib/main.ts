@@ -1,6 +1,18 @@
 import "./style.css";
 import "iconify-icon";
 
+const groupBy = function <K extends string, T>(arr: T[], func: (el: T) => K) {
+  return arr.reduce(
+    (acc, x) => {
+      (acc[func(x)] = acc[func(x)] || []).push(x);
+      return acc;
+    },
+    {} as {
+      [key: string]: T[];
+    },
+  );
+};
+
 type Comment = {
   id: number;
   offset: {
@@ -15,85 +27,187 @@ type Comment = {
 };
 
 const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
-  dateStyle: "medium",
-  timeStyle: "medium",
+  dateStyle: "short",
+  timeStyle: "short",
 });
+
+let globalInitialized = false;
 
 let selectedOffset: HTMLElement | null = null;
 
 let commentsCache: Comment[] | undefined;
 
-let popup = document.querySelector(
-  "#review-context-menu-popup",
+let commentsButton = document.querySelector(
+  "#review-comments-button",
 )! as HTMLDivElement;
-let review = document.querySelector(
-  "#review-context-menu-review",
-)! as HTMLDialogElement;
-let comments = document.querySelector(
-  "#review-context-menu-comments",
+let commentsPanel = document.querySelector(
+  "#review-comments-panel",
 )! as HTMLDivElement;
 
-const _registerActionPopup = ({
+const _registerDialog = ({
   id,
   content,
-  actions,
-  isModal = false,
+  actions = new Map<string, (el: HTMLElement) => void>(),
+  parent = document.body,
+  insertPosition = "afterend",
+  tag = "div",
+  initialize = () => {},
 }: {
   id: string;
   content: string;
-  actions: Map<string, Function>;
-  isModal?: boolean;
+  parent?: HTMLElement;
+  insertPosition?: InsertPosition;
+  actions?: Map<string, (el: HTMLElement) => void>;
+  tag?: keyof HTMLElementTagNameMap;
+  initialize?: (el: HTMLElement) => void;
 }) => {
-  if (document.querySelector(`#${id}`)) return;
-  document.body.insertAdjacentHTML(
-    "afterend",
+  if (parent.querySelector(`#${id}`)) return;
+  parent.insertAdjacentHTML(
+    insertPosition,
     `
-    <${isModal ? "dialog" : "div"} id="${id}" popover>
+    <${tag} id="${id}">
       ${content.trim()}
-    </${isModal ? "dialog" : "div"}>
+    </${tag}>
     `.trim(),
   );
-  const popupItems = document.querySelectorAll(`#${id} .popup_item`);
-  for (const item of popupItems) {
-    item.addEventListener("click", (e) => {
-      const action = (e.currentTarget as HTMLElement).dataset.action ?? "";
-      actions.get(action)?.();
+  const dialog = document.querySelector(`#${id}`)! as HTMLElement;
+  initialize(dialog);
+  const actionElements = dialog.querySelectorAll(`[data-action]`);
+  for (const actionEl of actionElements) {
+    actionEl.addEventListener("click", (e) => {
+      e.stopPropagation(); // Prevent bubble so that the document click event won't be triggered
+      const el = e.currentTarget as HTMLElement;
+      const action = el.dataset.action ?? "";
+      actions.get(action)?.(el);
     });
   }
 };
 
-const _openContextMenu = (e: MouseEvent) => {
-  selectedOffset = e.currentTarget as HTMLElement;
-
-  let pageX = e.pageX;
-  let pageY = e.pageY;
-
-  const prevDisplay = popup.style.display;
-  popup.style.display = "block";
-  if (pageX + popup.offsetWidth > window.innerWidth) {
-    pageX = window.innerWidth - popup.offsetWidth;
+const _selectOffsetParagraph = ({
+  el,
+  focusReply = false,
+  apiEndpoint,
+}: {
+  el: HTMLElement;
+  focusReply?: boolean;
+  apiEndpoint: string;
+}) => {
+  if (selectedOffset !== el) {
+    selectedOffset?.classList.remove("review_selected");
+    selectedOffset = el;
   }
-  if (pageY + popup.offsetHeight > window.innerHeight) {
-    pageY = window.innerHeight - popup.offsetHeight;
+
+  if (
+    selectedOffset?.classList.contains("review_has_comments") === true ||
+    focusReply
+  ) {
+    selectedOffset.classList.remove("review_focused");
+    selectedOffset.classList.add("review_selected");
+    _openCommentsPanel({
+      apiEndpoint,
+    });
   }
-  popup.style.display = prevDisplay;
+};
 
-  document.documentElement.style.setProperty(
-    "--review-context-menu-popup-page-x",
-    pageX + "px",
+const _unselectOffsetParagraph = () => {
+  selectedOffset?.classList.remove("review_selected");
+  selectedOffset = null;
+};
+
+const _openContextMenu = ({
+  el,
+  apiEndpoint,
+}: {
+  el: HTMLElement;
+  apiEndpoint: string;
+}) => {
+  _registerDialog({
+    id: "review-context-menu",
+    content: `
+    <button data-action="comment">
+      <iconify-icon class="iconify-inline" icon="material-symbols:add-comment-outline-rounded"></iconify-icon>
+    </button>
+    `,
+    parent: el,
+    insertPosition: "beforeend",
+    actions: new Map([
+      [
+        "comment",
+        (innerEl) => {
+          innerEl.remove();
+          _selectOffsetParagraph({
+            el,
+            focusReply: true,
+            apiEndpoint,
+          });
+        },
+      ],
+    ]),
+    initialize: (innerEl) => {
+      innerEl.addEventListener("mouseenter", () => {
+        el.classList.add("review_focused");
+      });
+      innerEl.addEventListener("mouseleave", () => {
+        el.classList.remove("review_focused");
+      });
+    },
+  });
+};
+
+const _closeContextMenu = () => {
+  const contextMenu = document.querySelector("#review-context-menu")!;
+  contextMenu.remove();
+};
+
+const _openCommentsPanel = async ({
+  apiEndpoint,
+}: {
+  focusReply?: boolean;
+  apiEndpoint: string;
+}) => {
+  const comments = [...(await _fetchComments({ apiEndpoint }))];
+
+  if (
+    comments.find(
+      (it) =>
+        it.offset.start ===
+          parseInt(selectedOffset!.dataset.originalDocumentStart!) &&
+        it.offset.end ===
+          parseInt(selectedOffset!.dataset.originalDocumentEnd!),
+    ) === undefined
+  ) {
+    comments.push({
+      id: -1,
+      offset: {
+        start: parseInt(selectedOffset!.dataset.originalDocumentStart!),
+        end: parseInt(selectedOffset!.dataset.originalDocumentEnd!),
+      },
+      commenter: {
+        name: "新评论",
+      },
+      comment: "",
+      created_time: new Date().toISOString(),
+    });
+  }
+
+  _renderComments(comments, apiEndpoint);
+  let selectedCommentsGroup = document.querySelector(
+    `#review-comments-panel .comments_group[data-original-document-start="${selectedOffset?.dataset.originalDocumentStart}"][data-original-document-end="${selectedOffset?.dataset.originalDocumentEnd}"]`,
   );
-  document.documentElement.style.setProperty(
-    "--review-context-menu-popup-page-y",
-    pageY + "px",
-  );
 
-  (
-    document.querySelector(
-      "#review-context-menu-popup .popup_item[data-action='comments']",
-    ) as HTMLButtonElement
-  ).disabled = !selectedOffset.classList.contains("review_has_comments");
+  selectedCommentsGroup?.classList.add("review_selected");
+  selectedCommentsGroup?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
 
-  popup.showPopover();
+  commentsButton.classList.add("review_hidden");
+  commentsPanel.classList.remove("review_hidden");
+};
+
+const _closeCommentsPanel = () => {
+  commentsPanel.classList.add("review_hidden");
+  commentsButton.classList.remove("review_hidden");
 };
 
 const _submitComment = async ({
@@ -172,23 +286,172 @@ const _fetchComments = async ({ apiEndpoint }: { apiEndpoint: string }) => {
   return comments;
 };
 
-const _renderComments = (comments: Comment[]) => {
-  const commentsEl = document.querySelector(
-    "#user-comments",
+const _renderComments = (comments: Comment[], apiEndpoint: string) => {
+  const commentsEl = commentsPanel.querySelector(
+    ".panel_main",
   )! as HTMLDivElement;
 
   const fragment = document.createDocumentFragment();
 
-  for (const comment of comments) {
+  const group = groupBy(
+    comments,
+    (it) => `${it.offset.start}-${it.offset.end}`,
+  );
+  for (const key of Object.keys(group).sort(
+    (a, b) => parseInt(a.split("-")[0]) - parseInt(b.split("-")[0]),
+  )) {
     const container = document.createElement("div");
-    container.classList.add("comment_container");
+    container.classList.add("comments_group");
+
+    const offsets = key.split("-");
+    container.dataset.originalDocumentStart = offsets[0];
+    container.dataset.originalDocumentEnd = offsets[1];
+
+    const paragraph = document.querySelector<HTMLDivElement>(
+      `.review_enabled[data-original-document-start="${container.dataset.originalDocumentStart}"][data-original-document-end="${container.dataset.originalDocumentEnd}"]`,
+    );
+    const content = paragraph?.textContent ?? "";
+
     container.innerHTML = `
-      <div class="comment_header">
-        <span class="comment_commenter">${comment.commenter.name}</span>
-        <span class="comment_time">${dateTimeFormatter.format(new Date(comment.created_time))}</span>
+      <div class="comments_group_header">
+        <span class="comments_group_text_content">${content}</span>
       </div>
-      <p class="comment_content">${comment.comment}</p>
+      <div class="comments_group_main"></div>
+      <div class="comments_group_footer">
+        <div class="comment_reply_panel">
+          <input required placeholder="署名为..." maxlength="255"></input>
+          <textarea required placeholder="写下你的评论..."  autocapitalize="sentences" autocomplete="on" spellcheck="true" autofocus="true" maxlength="65535"></textarea>
+          <div class="comment_reply_actions">
+            <span class="comment_reply_notification"></span>
+            <button class="comment_reply_item" data-action="cancel">取消</button>
+            <button class="comment_reply_item comment_reply_item_primary" data-action="submit">提交</button>
+        </div>
+      </div>
+    `.trim();
+
+    container
+      .querySelector(".comment_reply_panel textarea")!
+      .addEventListener("input", (e) => {
+        const element = e.currentTarget as HTMLTextAreaElement;
+        element.style.height = "5px";
+        element.style.height = element.scrollHeight + "px";
+      });
+
+    container
+      .querySelector(".comment_reply_actions")
+      ?.addEventListener("click", (e) => {
+        if (!(e.target instanceof HTMLButtonElement)) return;
+        const target = e.target as HTMLButtonElement;
+
+        const input = container.querySelector(
+          ".comment_reply_panel input",
+        ) as HTMLInputElement;
+        const textarea = container.querySelector(
+          ".comment_reply_panel textarea",
+        ) as HTMLTextAreaElement;
+
+        const notification = container.querySelector(
+          ".comment_reply_notification",
+        ) as HTMLSpanElement;
+
+        const submitButton = container.querySelector(
+          ".comment_reply_item[data-action='submit']",
+        ) as HTMLButtonElement;
+
+        switch (target?.dataset.action) {
+          case "cancel":
+            textarea.disabled = false;
+            textarea.value = "";
+            notification.textContent = "";
+            submitButton.disabled = false;
+            break;
+          case "submit":
+            textarea.disabled = true;
+            submitButton.disabled = true;
+
+            if (!input.checkValidity()) {
+              notification.textContent = "请填写署名";
+              return;
+            }
+
+            if (!textarea.checkValidity()) {
+              notification.textContent = "请填写评论内容";
+              return;
+            }
+
+            notification.textContent = "";
+
+            _submitComment({
+              apiEndpoint,
+              offsets: [
+                parseInt(selectedOffset!.dataset.originalDocumentStart!),
+                parseInt(selectedOffset!.dataset.originalDocumentEnd!),
+              ],
+              username: input.value,
+              content: textarea.value,
+            })
+              .then(() => {
+                textarea.disabled = false;
+                textarea.value = "";
+                notification.textContent = "";
+                submitButton.disabled = false;
+
+                _openCommentsPanel({
+                  apiEndpoint,
+                });
+              })
+              .catch((e) => {
+                console.error(e);
+                notification.textContent = "提交失败，请稍后再试";
+
+                textarea.disabled = false;
+                submitButton.disabled = false;
+              });
+            break;
+        }
+      });
+
+    container.addEventListener("mouseenter", () => {
+      paragraph?.classList.add("review_focused");
+    });
+    container.addEventListener("mouseleave", () => {
+      paragraph?.classList.remove("review_focused");
+    });
+    container.addEventListener("click", (e) => {
+      e.stopPropagation();
+      selectedOffset?.classList.remove("review_selected");
+      paragraph?.classList.remove("review_focused");
+      paragraph?.classList.add("review_selected");
+      document
+        .querySelector(".comments_group.review_selected")
+        ?.classList.remove("review_selected");
+      container.classList.add("review_selected");
+      selectedOffset = paragraph;
+      selectedOffset?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    });
+
+    const commentsGroup = group[key].sort(
+      (a, b) =>
+        new Date(a.created_time).getTime() - new Date(b.created_time).getTime(),
+    );
+    const main = container.querySelector(".comments_group_main")!;
+
+    for (const comment of commentsGroup) {
+      const commentEl = document.createElement("div");
+      commentEl.classList.add("comment");
+      commentEl.innerHTML = `
+        <div class="comment_header">
+          <span class="comment_commenter">${comment.commenter.name}</span>
+          <span class="comment_time">${dateTimeFormatter.format(new Date(comment.created_time))}</span>
+        </div>
+        <div class="comment_main">${comment.comment}</div>
       `.trim();
+      main.appendChild(commentEl);
+    }
+
     fragment.appendChild(container);
   }
 
@@ -240,175 +503,74 @@ export function setupReview(
 
   for (let offset of offsets) {
     offset.classList.add("review_enabled");
-    offset.addEventListener("click", _openContextMenu);
+    offset.addEventListener("click", (e) => {
+      e.stopPropagation(); // Prevent bubble so that the document click event won't be triggered
+      _selectOffsetParagraph({
+        el: e.currentTarget as HTMLElement,
+        apiEndpoint,
+      });
+    });
+    offset.addEventListener("mouseenter", (e) => {
+      _openContextMenu({
+        el: e.currentTarget as HTMLElement,
+        apiEndpoint,
+      });
+    });
+    offset.addEventListener("mouseleave", () => {
+      _closeContextMenu();
+    });
   }
-
-  _registerActionPopup({
-    id: "review-context-menu-popup",
-    content: `
-      <div class="popup_content">
-          <button class="popup_item" data-action="review">
-              <iconify-icon icon="mdi-light:comment-text"></iconify-icon>
-              <span>评论该段</span>
-          </button>
-          <button class="popup_item" data-action="comments">
-              <iconify-icon icon="mdi-light:comment"></iconify-icon>
-              <span>查看该段评论</span>
-          </button>
-      </div>
-      `,
-    actions: new Map<string, Function>([
-      [
-        "review",
-        () => {
-          popup.hidePopover();
-          (
-            document.querySelector("#review-content")! as HTMLSpanElement
-          ).textContent = selectedOffset!.textContent;
-          (
-            document.querySelector("#review-input")! as HTMLTextAreaElement
-          ).value = "";
-          (
-            document.querySelector("#review-notification")! as HTMLSpanElement
-          ).textContent = "";
-          review.showModal();
-        },
-      ],
-      [
-        "comments",
-        async () => {
-          popup.hidePopover();
-          (
-            document.querySelector("#comments-content")! as HTMLSpanElement
-          ).textContent = selectedOffset!.textContent;
-          _renderComments(
-            (await _fetchComments({ apiEndpoint })).filter(
-              (it) =>
-                it.offset.start ===
-                  parseInt(selectedOffset!.dataset.originalDocumentStart!) &&
-                it.offset.end ===
-                  parseInt(selectedOffset!.dataset.originalDocumentEnd!),
-            ),
-          );
-          comments.showPopover();
-        },
-      ],
-    ]),
-  });
-
-  _registerActionPopup({
-    id: "review-context-menu-review",
-    content: `
-      <div class="popup_inner">
-        <div class="popup_header">
-          <span id="review-content"></span>
-        </div>
-        <div class="popup_content">
-          <textarea id="review-input" required placeholder="写下你的评论..." autocapitalize="sentences" autocomplete="on" spellcheck="true" autofocus="true"></textarea>
-          <div class="popup_bottom">
-            <div class="popup_input_username">
-              <span>署名：</span>
-              <input id="review-username" required></input>
-            </div>
-            <div class="popup_actions">
-              <span id="review-notification"></span>
-              <button class="popup_item" data-action="cancel">取消</button>
-              <button class="popup_item popup_item_primary" data-action="submit">提交</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      `,
-    actions: new Map<string, Function>([
-      [
-        "cancel",
-        () => {
-          review.close();
-        },
-      ],
-      [
-        "submit",
-        async () => {
-          const username = document.querySelector(
-            "#review-username",
-          )! as HTMLInputElement;
-          const content = document.querySelector(
-            "#review-input",
-          )! as HTMLTextAreaElement;
-          const notification = document.querySelector(
-            "#review-notification",
-          )! as HTMLSpanElement;
-
-          if (!username.checkValidity()) {
-            notification.textContent = "请填写署名";
-            return;
-          }
-
-          if (!content.checkValidity()) {
-            notification.textContent = "请填写评论内容";
-            return;
-          }
-
-          notification.textContent = "";
-
-          try {
-            await _submitComment({
-              apiEndpoint,
-              offsets: [
-                parseInt(selectedOffset!.dataset.originalDocumentStart!),
-                parseInt(selectedOffset!.dataset.originalDocumentEnd!),
-              ],
-              username: username.value,
-              content: content.value,
-            });
-
-            review.close();
-          } catch (e: unknown) {
-            console.error(e);
-            notification.textContent = "提交失败，请稍后再试";
-          }
-        },
-      ],
-    ]),
-    isModal: true,
-  });
-
-  _registerActionPopup({
-    id: "review-context-menu-comments",
-    content: `
-      <div class="popup_inner">
-        <div class="popup_header">
-          <span id="comments-content"></span>
-        </div>
-        <div class="popup_content">
-          <div id="user-comments"></div>
-          <div class="popup_bottom">
-            <div class="popup_actions">
-              <button class="popup_item" data-action="cancel">关闭</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `,
-    actions: new Map<string, Function>([
-      [
-        "cancel",
-        () => {
-          comments.hidePopover();
-        },
-      ],
-    ]),
-  });
 
   _updateAvailableComments({ apiEndpoint });
 
-  popup = document.querySelector(
-    "#review-context-menu-popup",
+  if (globalInitialized) return;
+
+  document.addEventListener("click", () => {
+    _unselectOffsetParagraph();
+  });
+
+  _registerDialog({
+    id: "review-comments-button",
+    content: `
+    <button data-action="open">
+      <iconify-icon class="iconify-inline" icon="material-symbols:comment-outline-rounded"></iconify-icon>
+    </button>
+    `,
+    actions: new Map([
+      [
+        "open",
+        () =>
+          _openCommentsPanel({
+            apiEndpoint,
+          }),
+      ],
+    ]),
+  });
+
+  _registerDialog({
+    id: "review-comments-panel",
+    content: `
+    <div class="panel_header">
+      <span>本页评论</span>
+      <button data-action="close">
+        <iconify-icon class="iconify-inline" icon="material-symbols:close"></iconify-icon>
+      </button>
+    </div>
+    <div class="panel_main"></div>
+    `,
+    insertPosition: "beforeend",
+    actions: new Map([["close", () => _closeCommentsPanel()]]),
+  });
+
+  commentsButton = document.querySelector(
+    "#review-comments-button",
   )! as HTMLDivElement;
-  review = document.querySelector(
-    "#review-context-menu-review",
-  )! as HTMLDialogElement;
-  comments = document.querySelector(
-    "#review-context-menu-comments",
+  commentsPanel = document.querySelector(
+    "#review-comments-panel",
   )! as HTMLDivElement;
+
+  // initialize comments panel position
+  _closeCommentsPanel();
+
+  globalInitialized = true;
 }
