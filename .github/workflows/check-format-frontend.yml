@@ -1,0 +1,30 @@
+name: Check PR Format and Test for frontend
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  check-format:
+    name: Check PR Format
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        name: Set Node.js 20.x
+        with:
+          node-version: 20.x
+      - uses: borales/actions-yarn@v5
+        name: Run install
+        with:
+          cmd: install
+          dir: frontend
+      - uses: borales/actions-yarn@v5
+        name: Check Format
+        with:
+          cmd: prettier --check .
+          dir: frontend
