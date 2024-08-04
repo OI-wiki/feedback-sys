@@ -6109,3 +6109,8 @@ html .md-typeset .footnote-ref {
     margin-right: 0.8rem;
   }
 }
+
+/* Custom CSS for testing page */
+.md-content {
+  margin: 0 20vw;
+}
