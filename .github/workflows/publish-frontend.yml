@@ -1,0 +1,83 @@
+name: Publish frontend to npm
+
+on:
+  push:
+    tags:
+      - "*"
+  workflow_dispatch:
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      src: ${{ steps.filter.outputs.src }}
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout Repo
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            src:
+              - 'frontend/**'
+  publish:
+    name: Publish
+    needs: changes
+    if: ${{ needs.changes.outputs.src == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout Repo
+      - uses: actions/setup-node@v4
+        name: Set Node.js 20.x
+        with:
+          node-version: 20.x
+          registry-url: "https://registry.npmjs.org"
+      - uses: borales/actions-yarn@v5
+        name: Run install
+        with:
+          cmd: install
+          dir: frontend
+      - uses: borales/actions-yarn@v5
+        name: Run build
+        with:
+          cmd: build
+          dir: frontend
+      - run: npm publish --provenance --access public
+        name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  upload-artifacts:
+    name: Upload Artifacts
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout Repo
+      - uses: actions/setup-node@v4
+        name: Set Node.js 20.x
+        with:
+          node-version: 20.x
+      - uses: borales/actions-yarn@v5
+        name: Run install
+        with:
+          cmd: install
+          dir: frontend
+      - uses: borales/actions-yarn@v5
+        name: Run build
+        with:
+          cmd: build
+          dir: frontend
+      - uses: actions/upload-artifact@v2
+        with:
+          name: review
+          path: frontend/dist/
