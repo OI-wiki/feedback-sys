@@ -444,11 +444,13 @@ const _renderComments = (comments: Comment[], apiEndpoint: string) => {
       commentEl.classList.add("comment");
       commentEl.innerHTML = `
         <div class="comment_header">
-          <span class="comment_commenter">${comment.commenter.name}</span>
+          <span class="comment_commenter"></span>
           <span class="comment_time">${dateTimeFormatter.format(new Date(comment.created_time))}</span>
         </div>
-        <div class="comment_main">${comment.comment}</div>
+        <div class="comment_main"></div>
       `.trim();
+      commentEl.querySelector(".comment_commenter")!.textContent = comment.commenter.name;
+      commentEl.querySelector(".comment_main")!.textContent = comment.comment;
       main.appendChild(commentEl);
     }
 
