@@ -6,8 +6,8 @@ export default defineConfig({
   build: {
     lib: {
       entry: "./lib/main.ts",
-      name: "Review",
-      fileName: "review",
+      name: "OffsetsInjectionReview",
+      fileName: "offsets-injection-review",
     },
   },
   css: {
