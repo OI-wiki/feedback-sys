@@ -1,7 +1,7 @@
 {
   "name": "review",
-  "private": true,
-  "version": "0.0.0",
+  "private": false,
+  "version": "0.0.1",
   "type": "module",
   "files": [
     "dist",
@@ -23,7 +23,7 @@
   "devDependencies": {
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.40",
-    "postcss-preset-env": "^9.6.0",
+    "postcss-preset-env": "^10.0.0",
     "prettier": "^3.3.3",
     "typescript": "^5.4.5",
     "vite": "^5.2.10"
