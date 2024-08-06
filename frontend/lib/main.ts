@@ -32,17 +32,14 @@ const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
 });
 
 let globalInitialized = false;
+let apiEndpoint = "/api";
 
 let selectedOffset: HTMLElement | null = null;
 
 let commentsCache: Comment[] | undefined;
 
-let commentsButton = document.querySelector(
-  "#review-comments-button",
-)! as HTMLDivElement;
-let commentsPanel = document.querySelector(
-  "#review-comments-panel",
-)! as HTMLDivElement;
+let commentsButton: HTMLElement;
+let commentsPanel: HTMLElement;
 
 const _registerDialog = ({
   id,
@@ -60,8 +57,10 @@ const _registerDialog = ({
   actions?: Map<string, (el: HTMLElement) => void>;
   tag?: keyof HTMLElementTagNameMap;
   initialize?: (el: HTMLElement) => void;
-}) => {
-  if (parent.querySelector(`#${id}`)) return;
+}): HTMLElement => {
+  let dialog = document.querySelector<HTMLElement>(`#${id}`);
+  if (dialog) return dialog;
+
   parent.insertAdjacentHTML(
     insertPosition,
     `
@@ -70,8 +69,10 @@ const _registerDialog = ({
     </${tag}>
     `.trim(),
   );
-  const dialog = document.querySelector(`#${id}`)! as HTMLElement;
+  dialog = document.querySelector(`#${id}`)! as HTMLElement;
+
   initialize(dialog);
+
   const actionElements = dialog.querySelectorAll(`[data-action]`);
   for (const actionEl of actionElements) {
     actionEl.addEventListener("click", (e) => {
@@ -81,16 +82,16 @@ const _registerDialog = ({
       actions.get(action)?.(el);
     });
   }
+
+  return dialog;
 };
 
 const _selectOffsetParagraph = ({
   el,
   focusReply = false,
-  apiEndpoint,
 }: {
   el: HTMLElement;
   focusReply?: boolean;
-  apiEndpoint: string;
 }) => {
   if (selectedOffset !== el) {
     selectedOffset?.classList.remove("review_selected");
@@ -103,9 +104,7 @@ const _selectOffsetParagraph = ({
   ) {
     selectedOffset.classList.remove("review_focused");
     selectedOffset.classList.add("review_selected");
-    _openCommentsPanel({
-      apiEndpoint,
-    });
+    _openCommentsPanel();
   }
 };
 
@@ -114,13 +113,7 @@ const _unselectOffsetParagraph = () => {
   selectedOffset = null;
 };
 
-const _openContextMenu = ({
-  el,
-  apiEndpoint,
-}: {
-  el: HTMLElement;
-  apiEndpoint: string;
-}) => {
+const _openContextMenu = ({ el }: { el: HTMLElement }) => {
   _registerDialog({
     id: "review-context-menu",
     content: `
@@ -138,7 +131,6 @@ const _openContextMenu = ({
           _selectOffsetParagraph({
             el,
             focusReply: true,
-            apiEndpoint,
           });
         },
       ],
@@ -159,13 +151,8 @@ const _closeContextMenu = () => {
   contextMenu.remove();
 };
 
-const _openCommentsPanel = async ({
-  apiEndpoint,
-}: {
-  focusReply?: boolean;
-  apiEndpoint: string;
-}) => {
-  const comments = [...(await _fetchComments({ apiEndpoint }))];
+const _openCommentsPanel = async () => {
+  const comments = [...(await _fetchComments())];
 
   const selected = selectedOffset;
 
@@ -191,7 +178,7 @@ const _openCommentsPanel = async ({
     });
   }
 
-  _renderComments(comments, apiEndpoint);
+  _renderComments(comments);
   let selectedCommentsGroup = document.querySelector(
     `#review-comments-panel .comments_group[data-original-document-start="${selectedOffset?.dataset.originalDocumentStart}"][data-original-document-end="${selectedOffset?.dataset.originalDocumentEnd}"]`,
   );
@@ -212,12 +199,10 @@ const _closeCommentsPanel = () => {
 };
 
 const _submitComment = async ({
-  apiEndpoint,
   offsets,
   username,
   content,
 }: {
-  apiEndpoint: string;
   offsets: [number, number];
   username: string;
   content: string;
@@ -226,8 +211,6 @@ const _submitComment = async ({
   if (!commitHash) {
     throw new Error("Commit hash not found");
   }
-
-  apiEndpoint = apiEndpoint.endsWith("/") ? apiEndpoint : apiEndpoint + "/";
 
   const comment = {
     offset: {
@@ -265,15 +248,14 @@ const _submitComment = async ({
     });
   }
 
-  _updateAvailableComments({ apiEndpoint });
+  _updateAvailableComments();
 };
 
-const _fetchComments = async ({ apiEndpoint }: { apiEndpoint: string }) => {
+const _fetchComments = async () => {
   if (commentsCache) {
     return commentsCache;
   }
 
-  apiEndpoint = apiEndpoint.endsWith("/") ? apiEndpoint : apiEndpoint + "/";
   const res = await fetch(
     `${apiEndpoint}comment/${encodeURIComponent(new URL(window.location.href).pathname)}`,
   );
@@ -287,7 +269,7 @@ const _fetchComments = async ({ apiEndpoint }: { apiEndpoint: string }) => {
   return comments;
 };
 
-const _renderComments = (comments: Comment[], apiEndpoint: string) => {
+const _renderComments = (comments: Comment[]) => {
   const commentsEl = commentsPanel.querySelector(
     ".panel_main",
   )! as HTMLDivElement;
@@ -383,7 +365,6 @@ const _renderComments = (comments: Comment[], apiEndpoint: string) => {
             notification.textContent = "";
 
             _submitComment({
-              apiEndpoint,
               offsets: [
                 parseInt(selectedOffset!.dataset.originalDocumentStart!),
                 parseInt(selectedOffset!.dataset.originalDocumentEnd!),
@@ -397,9 +378,7 @@ const _renderComments = (comments: Comment[], apiEndpoint: string) => {
                 notification.textContent = "";
                 submitButton.disabled = false;
 
-                _openCommentsPanel({
-                  apiEndpoint,
-                });
+                _openCommentsPanel();
               })
               .catch((e) => {
                 console.error(e);
@@ -465,18 +444,14 @@ const _renderComments = (comments: Comment[], apiEndpoint: string) => {
   commentsEl.appendChild(fragment);
 };
 
-const _updateAvailableComments = async ({
-  apiEndpoint,
-}: {
-  apiEndpoint: string;
-}) => {
+const _updateAvailableComments = async () => {
   const offsets = Array.from(
     document.querySelectorAll<HTMLElement>(
       ".review_enabled[data-original-document-start][data-original-document-end]",
     ),
   );
 
-  await _fetchComments({ apiEndpoint });
+  await _fetchComments();
 
   for (let offset of offsets) {
     offset.classList.remove("review_has_comments");
@@ -493,17 +468,26 @@ const _updateAvailableComments = async ({
   }
 };
 
+export const __VERSION__: string = __LIB_VERSION__;
+
 export function setupReview(
   el: Element,
-  { apiEndpoint = "/api" }: { apiEndpoint?: string } = {},
+  { apiEndpoint: endpoint = "/api" }: { apiEndpoint?: string } = {},
 ) {
+  apiEndpoint = endpoint.endsWith("/") ? endpoint : endpoint + "/";
+
   const offsets = Array.from(
     el.querySelectorAll<HTMLElement>(
       "[data-original-document-start][data-original-document-end]",
     ),
   );
 
-  if (!offsets) return;
+  if (!offsets) {
+    console.warn(
+      "offsets-injection-review not found any offsets to inject, quitting...",
+    );
+    return;
+  }
 
   for (let offset of offsets) {
     offset.classList.add("review_enabled");
@@ -511,13 +495,11 @@ export function setupReview(
       e.stopPropagation(); // Prevent bubble so that the document click event won't be triggered
       _selectOffsetParagraph({
         el: e.currentTarget as HTMLElement,
-        apiEndpoint,
       });
     });
     offset.addEventListener("mouseenter", (e) => {
       _openContextMenu({
         el: e.currentTarget as HTMLElement,
-        apiEndpoint,
       });
     });
     offset.addEventListener("mouseleave", () => {
@@ -525,33 +507,32 @@ export function setupReview(
     });
   }
 
-  _updateAvailableComments({ apiEndpoint });
+  // clear cache
+  commentsCache = undefined;
 
-  if (globalInitialized) return;
+  _updateAvailableComments();
+
+  if (globalInitialized) {
+    _closeCommentsPanel();
+    console.log("offsets-injection-review has been successfully reset.");
+    return;
+  }
 
   document.addEventListener("click", () => {
     _unselectOffsetParagraph();
   });
 
-  _registerDialog({
+  commentsButton = _registerDialog({
     id: "review-comments-button",
     content: `
     <button data-action="open">
       <iconify-icon class="iconify-inline" icon="material-symbols:comment-outline-rounded"></iconify-icon>
     </button>
     `,
-    actions: new Map([
-      [
-        "open",
-        () =>
-          _openCommentsPanel({
-            apiEndpoint,
-          }),
-      ],
-    ]),
+    actions: new Map([["open", () => _openCommentsPanel()]]),
   });
 
-  _registerDialog({
+  commentsPanel = _registerDialog({
     id: "review-comments-panel",
     content: `
     <div class="panel_header">
@@ -566,15 +547,12 @@ export function setupReview(
     actions: new Map([["close", () => _closeCommentsPanel()]]),
   });
 
-  commentsButton = document.querySelector(
-    "#review-comments-button",
-  )! as HTMLDivElement;
-  commentsPanel = document.querySelector(
-    "#review-comments-panel",
-  )! as HTMLDivElement;
-
   // initialize comments panel position
   _closeCommentsPanel();
+
+  console.log(
+    `offsets-injection-review version ${__VERSION__} has been successfully installed.`,
+  );
 
   globalInitialized = true;
 }
