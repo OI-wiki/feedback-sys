@@ -73,6 +73,8 @@ iconify-icon.iconify-inline {
 
   transition: transform 0.3s;
 
+  z-index: 100;
+
   &:hover {
     transform: translateX(-20%);
   }
@@ -100,6 +102,8 @@ iconify-icon.iconify-inline {
   font-size: 14px;
 
   transition: transform 0.3s;
+
+  z-index: 100;
 
   @media (--mobile) {
     width: 100vw;
