@@ -9,7 +9,7 @@ const groupBy = function <K extends string, T>(arr: T[], func: (el: T) => K) {
     },
     {} as {
       [key: string]: T[];
-    }
+    },
   );
 };
 
@@ -67,7 +67,7 @@ const _registerDialog = ({
     <${tag} id="${id}">
       ${content.trim()}
     </${tag}>
-    `.trim()
+    `.trim(),
   );
   dialog = document.querySelector(`#${id}`)! as HTMLElement;
 
@@ -161,7 +161,7 @@ const _openCommentsPanel = async () => {
     comments.find(
       (it) =>
         it.offset.start === parseInt(selected.dataset.originalDocumentStart!) &&
-        it.offset.end === parseInt(selected.dataset.originalDocumentEnd!)
+        it.offset.end === parseInt(selected.dataset.originalDocumentEnd!),
     ) === undefined
   ) {
     comments.push({
@@ -180,7 +180,7 @@ const _openCommentsPanel = async () => {
 
   _renderComments(comments);
   let selectedCommentsGroup = document.querySelector(
-    `#review-comments-panel .comments_group[data-original-document-start="${selectedOffset?.dataset.originalDocumentStart}"][data-original-document-end="${selectedOffset?.dataset.originalDocumentEnd}"]`
+    `#review-comments-panel .comments_group[data-original-document-start="${selectedOffset?.dataset.originalDocumentStart}"][data-original-document-end="${selectedOffset?.dataset.originalDocumentEnd}"]`,
   );
 
   selectedCommentsGroup?.classList.add("review_selected");
@@ -234,7 +234,7 @@ const _submitComment = async ({
         ...comment,
         commit_hash: commitHash,
       }),
-    }
+    },
   );
   if (!res.ok) {
     throw res;
@@ -257,7 +257,7 @@ const _fetchComments = async () => {
   }
 
   const res = await fetch(
-    `${apiEndpoint}comment/${encodeURIComponent(new URL(window.location.href).pathname)}`
+    `${apiEndpoint}comment/${encodeURIComponent(new URL(window.location.href).pathname)}`,
   );
   if (!res.ok) {
     throw res;
@@ -271,17 +271,17 @@ const _fetchComments = async () => {
 
 const _renderComments = (comments: Comment[]) => {
   const commentsEl = commentsPanel.querySelector(
-    ".panel_main"
+    ".panel_main",
   )! as HTMLDivElement;
 
   const fragment = document.createDocumentFragment();
 
   const group = groupBy(
     comments,
-    (it) => `${it.offset.start}-${it.offset.end}`
+    (it) => `${it.offset.start}-${it.offset.end}`,
   );
   for (const key of Object.keys(group).sort(
-    (a, b) => parseInt(a.split("-")[0]) - parseInt(b.split("-")[0])
+    (a, b) => parseInt(a.split("-")[0]) - parseInt(b.split("-")[0]),
   )) {
     const container = document.createElement("div");
     container.classList.add("comments_group");
@@ -291,7 +291,7 @@ const _renderComments = (comments: Comment[]) => {
     container.dataset.originalDocumentEnd = offsets[1];
 
     const paragraph = document.querySelector<HTMLDivElement>(
-      `.review_enabled[data-original-document-start="${container.dataset.originalDocumentStart}"][data-original-document-end="${container.dataset.originalDocumentEnd}"]`
+      `.review_enabled[data-original-document-start="${container.dataset.originalDocumentStart}"][data-original-document-end="${container.dataset.originalDocumentEnd}"]`,
     );
     const content = paragraph?.textContent ?? "";
 
@@ -327,18 +327,18 @@ const _renderComments = (comments: Comment[]) => {
         const target = e.target as HTMLButtonElement;
 
         const input = container.querySelector(
-          ".comment_reply_panel input"
+          ".comment_reply_panel input",
         ) as HTMLInputElement;
         const textarea = container.querySelector(
-          ".comment_reply_panel textarea"
+          ".comment_reply_panel textarea",
         ) as HTMLTextAreaElement;
 
         const notification = container.querySelector(
-          ".comment_reply_notification"
+          ".comment_reply_notification",
         ) as HTMLSpanElement;
 
         const submitButton = container.querySelector(
-          ".comment_reply_item[data-action='submit']"
+          ".comment_reply_item[data-action='submit']",
         ) as HTMLButtonElement;
 
         switch (target?.dataset.action) {
@@ -386,7 +386,11 @@ const _renderComments = (comments: Comment[]) => {
                 if (e instanceof Error) {
                   notification.textContent = e.message;
                 } else if (e instanceof Response) {
-                  if (e.headers.get("content-type")?.includes("application/json") === true) {
+                  if (
+                    e.headers
+                      .get("content-type")
+                      ?.includes("application/json") === true
+                  ) {
                     const json = (await e.json()) as {
                       status: number;
                       error: string;
@@ -430,7 +434,7 @@ const _renderComments = (comments: Comment[]) => {
 
     const commentsGroup = group[key].sort(
       (a, b) =>
-        new Date(a.created_time).getTime() - new Date(b.created_time).getTime()
+        new Date(a.created_time).getTime() - new Date(b.created_time).getTime(),
     );
     const main = container.querySelector(".comments_group_main")!;
 
@@ -462,8 +466,8 @@ const _renderComments = (comments: Comment[]) => {
 const _updateAvailableComments = async () => {
   const offsets = Array.from(
     document.querySelectorAll<HTMLElement>(
-      ".review_enabled[data-original-document-start][data-original-document-end]"
-    )
+      ".review_enabled[data-original-document-start][data-original-document-end]",
+    ),
   );
 
   await _fetchComments();
@@ -475,7 +479,7 @@ const _updateAvailableComments = async () => {
         (it) =>
           it.offset.start ===
             parseInt(offset!.dataset.originalDocumentStart!) &&
-          it.offset.end === parseInt(offset!.dataset.originalDocumentEnd!)
+          it.offset.end === parseInt(offset!.dataset.originalDocumentEnd!),
       )
     ) {
       offset.classList.add("review_has_comments");
@@ -487,19 +491,19 @@ export const __VERSION__: string = __LIB_VERSION__;
 
 export function setupReview(
   el: Element,
-  { apiEndpoint: endpoint = "/api" }: { apiEndpoint?: string } = {}
+  { apiEndpoint: endpoint = "/api" }: { apiEndpoint?: string } = {},
 ) {
   apiEndpoint = endpoint.endsWith("/") ? endpoint : endpoint + "/";
 
   const offsets = Array.from(
     el.querySelectorAll<HTMLElement>(
-      "[data-original-document-start][data-original-document-end]"
-    )
+      "[data-original-document-start][data-original-document-end]",
+    ),
   );
 
   if (!offsets) {
     console.warn(
-      "offsets-injection-review not found any offsets to inject, quitting..."
+      "offsets-injection-review not found any offsets to inject, quitting...",
     );
     return;
   }
@@ -566,7 +570,7 @@ export function setupReview(
   _closeCommentsPanel();
 
   console.log(
-    `offsets-injection-review version ${__VERSION__} has been successfully installed.`
+    `offsets-injection-review version ${__VERSION__} has been successfully installed.`,
   );
 
   globalInitialized = true;
