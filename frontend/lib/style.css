@@ -110,10 +110,6 @@ iconify-icon.iconify-inline {
 
   z-index: 100;
 
-  &:hover {
-    transform: translateX(-20%);
-  }
-
   &.review_hidden {
     transform: translateX(100%);
   }
