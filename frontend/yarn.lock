@@ -421,11 +421,6 @@
   resolved "https://registry.yarnpkg.com/@esbuild/win32-x64/-/win32-x64-0.21.5.tgz#acad351d582d157bb145535db2a6ff53dd514b5c"
   integrity sha512-tQd/1efJuzPC6rCFwEvLtci/xNFcTZknmXs98FYDfGE4wP9ClFV98nyKrzJKVPMhdDnjzLhdUyMX4PsQAPjwIw==
 
-"@iconify/types@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@iconify/types/-/types-2.0.0.tgz#ab0e9ea681d6c8a1214f30cd741fe3a20cc57f57"
-  integrity sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==
-
 "@rollup/rollup-android-arm-eabi@4.19.1":
   version "4.19.1"
   resolved "https://registry.yarnpkg.com/@rollup/rollup-android-arm-eabi/-/rollup-android-arm-eabi-4.19.1.tgz#7746deb85e4a8fb54fbfda8ac5c102692f102476"
@@ -624,13 +619,6 @@ fsevents@~2.3.2, fsevents@~2.3.3:
   version "2.3.3"
   resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.3.3.tgz#cac6407785d03675a2a5e1a5305c697b347d90d6"
   integrity sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==
-
-iconify-icon@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/iconify-icon/-/iconify-icon-2.1.0.tgz#1947e9bbfa337ca1fc3ccf8e5f590857ec387661"
-  integrity sha512-lto4XU3bwTQnb+D/CsJ4dWAo0aDe+uPMxEtxyOodw9l7R9QnJUUab3GCehlw2M8mDHdeUu/ufx8PvRQiJphhXg==
-  dependencies:
-    "@iconify/types" "^2.0.0"
 
 nanoid@^3.3.7:
   version "3.3.7"
