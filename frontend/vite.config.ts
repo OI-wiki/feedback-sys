@@ -6,8 +6,8 @@ export default defineConfig({
   build: {
     lib: {
       entry: "./lib/main.ts",
-      name: "OffsetsInjectionReview",
-      fileName: "offsets-injection-review",
+      name: "OIWikiFeedbackSysFrontend",
+      fileName: "oiwiki-feedback-sys-frontend",
     },
   },
   css: {
