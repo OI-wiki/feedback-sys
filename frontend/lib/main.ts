@@ -1,5 +1,4 @@
 import "./style.css";
-import "iconify-icon";
 
 const groupBy = function <K extends string, T>(arr: T[], func: (el: T) => K) {
   return arr.reduce(
@@ -118,7 +117,8 @@ const _openContextMenu = ({ el }: { el: HTMLElement }) => {
     id: "review-context-menu",
     content: `
     <button data-action="comment">
-      <iconify-icon class="iconify-inline" icon="material-symbols:add-comment-outline-rounded"></iconify-icon>
+      <!-- <iconify-icon class="iconify-inline" icon="material-symbols:add-comment-outline-rounded"></iconify-icon> -->
+      <svg class="iconify-icon iconify-inline" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M11 11v2q0 .425.288.713T12 14t.713-.288T13 13v-2h2q.425 0 .713-.288T16 10t-.288-.712T15 9h-2V7q0-.425-.288-.712T12 6t-.712.288T11 7v2H9q-.425 0-.712.288T8 10t.288.713T9 11zm-5 7l-2.3 2.3q-.475.475-1.088.213T2 19.575V4q0-.825.588-1.412T4 2h16q.825 0 1.413.588T22 4v12q0 .825-.587 1.413T20 18zm-.85-2H20V4H4v13.125zM4 16V4z"></path></svg>
     </button>
     `,
     parent: el,
@@ -545,7 +545,8 @@ export function setupReview(
     id: "review-comments-button",
     content: `
     <button data-action="open">
-      <iconify-icon class="iconify-inline" icon="material-symbols:comment-outline-rounded"></iconify-icon>
+      <!-- <iconify-icon class="iconify-inline" icon="material-symbols:comment-outline-rounded"></iconify-icon> -->
+      <svg class="iconify-icon iconify-inline" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M7 14h10q.425 0 .713-.288T18 13t-.288-.712T17 12H7q-.425 0-.712.288T6 13t.288.713T7 14m0-3h10q.425 0 .713-.288T18 10t-.288-.712T17 9H7q-.425 0-.712.288T6 10t.288.713T7 11m0-3h10q.425 0 .713-.288T18 7t-.288-.712T17 6H7q-.425 0-.712.288T6 7t.288.713T7 8M4 18q-.825 0-1.412-.587T2 16V4q0-.825.588-1.412T4 2h16q.825 0 1.413.588T22 4v15.575q0 .675-.612.938T20.3 20.3L18 18zm14.85-2L20 17.125V4H4v12zM4 16V4z"></path></svg>
     </button>
     `,
     actions: new Map([["open", () => _openCommentsPanel()]]),
@@ -557,7 +558,8 @@ export function setupReview(
     <div class="panel_header">
       <span>本页评论</span>
       <button data-action="close">
-        <iconify-icon class="iconify-inline" icon="material-symbols:close"></iconify-icon>
+        <!-- <iconify-icon class="iconify-inline" icon="material-symbols:close"></iconify-icon> -->
+        <svg class="iconify-icon iconify-inline" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z"></path></svg>
       </button>
     </div>
     <div class="panel_main"></div>

@@ -30,15 +30,16 @@
   --review-on-text-color: #1e1e1e;
 }
 
-iconify-icon {
-  display: inline-block;
+.iconify-icon {
+  display: block;
   width: 1em;
   height: 1em;
+  vertical-align: 0;
 }
-iconify-icon.iconify-inline {
+.iconify-icon.iconify-inline {
   vertical-align: -0.125em;
 }
-.review_dark_mode iconify-icon {
+.review_dark_mode .iconify-icon {
   color: var(--review-text-color);
 }
 
