@@ -1,20 +1,20 @@
 {
-  "name": "offsets-injection-review",
+  "name": "oiwiki-feedback-sys-frontend",
   "private": false,
-  "version": "0.0.8",
+  "version": "0.1.0",
   "license": "Apache-2.0",
   "type": "module",
   "files": [
     "dist",
     "index.d.ts"
   ],
-  "main": "./dist/offsets-injection-review.umd.cjs",
-  "module": "./dist/offsets-injection-review.js",
+  "main": "./dist/oiwiki-feedback-sys-frontend.umd.cjs",
+  "module": "./dist/oiwiki-feedback-sys-frontend.js",
   "types": "./index.d.ts",
   "exports": {
     "types": "./index.d.ts",
-    "import": "./dist/offsets-injection-review.js",
-    "require": "./dist/offsets-injection-review.umd.cjs"
+    "import": "./dist/oiwiki-feedback-sys-frontend.js",
+    "require": "./dist/oiwiki-feedback-sys-frontend.umd.cjs"
   },
   "scripts": {
     "dev": "vite",

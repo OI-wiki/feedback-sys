@@ -503,7 +503,7 @@ export function setupReview(
 
   if (!offsets) {
     console.warn(
-      "offsets-injection-review not found any offsets to inject, quitting...",
+      "oiwiki-feedback-sys-frontend not found any offsets to inject, quitting...",
     );
     return;
   }
@@ -533,7 +533,7 @@ export function setupReview(
 
   if (globalInitialized) {
     _closeCommentsPanel();
-    console.log("offsets-injection-review has been successfully reset.");
+    console.log("oiwiki-feedback-sys-frontend has been successfully reset.");
     return;
   }
 
@@ -572,7 +572,7 @@ export function setupReview(
   _closeCommentsPanel();
 
   console.log(
-    `offsets-injection-review version ${__VERSION__} has been successfully installed.`,
+    `oiwiki-feedback-sys-frontend version ${__VERSION__} has been successfully installed.`,
   );
 
   globalInitialized = true;
