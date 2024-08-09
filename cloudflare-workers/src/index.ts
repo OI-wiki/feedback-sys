@@ -149,7 +149,7 @@ router.put('/meta/commithash', async (req, env, ctx) => {
 		return error(401, 'Unauthorized');
 	}
 
-	setCommitHash(env, body.commit_hash);
+	await setCommitHash(env, body.commit_hash);
 
 	return {
 		status: 200,
