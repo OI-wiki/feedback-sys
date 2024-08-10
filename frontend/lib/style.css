@@ -1,3 +1,5 @@
+@charset "UTF-8";
+
 @custom-selector :--review
   .review_enabled[data-original-document-start][data-original-document-end];
 @custom-media --mobile (width <= 768px);
@@ -17,9 +19,9 @@
 }
 
 .review_dark_mode {
-  --review-primary-color: #ff8c00; /* Darker shade of orange */
-  --review-secondary-color: #ffb84d; /* Darker shade of yellow */
-  --review-variant-color: #8c7a5b;
+  --review-primary-color: #ff8c00;
+  --review-secondary-color: #ffb84d;
+  --review-variant-color: #c09a2682;
   --review-variant-bg-color: #2c2c2c;
   --review-variant-bg-color-lighter: #3a3a3a;
   --review-border-color: #444;
@@ -66,22 +68,35 @@
 
 #review-context-menu {
   display: inline-block;
+  position: relative;
 
   padding: 0 4px;
-  border-radius: 4px;
+  border-radius: 4px 0 0 4px;
 
   color: var(--review-text-color);
 
+  & button {
+    vertical-align: text-top;
+  }
+
+  & span {
+    position: absolute;
+    top: 0;
+    left: 100%;
+
+    width: max-content;
+    height: 100%;
+
+    padding-right: 4px;
+    border-radius: 0 4px 4px 0;
+  }
+
   &:hover {
     background-color: var(--review-variant-bg-color);
-  }
-  &:hover::after {
-    content: "评论该段";
 
-    position: absolute;
-
-    background-color: var(--review-variant-bg-color);
-    margin-left: 4px;
+    & span {
+      background-color: var(--review-variant-bg-color);
+    }
   }
 }
 
