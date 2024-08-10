@@ -91,11 +91,15 @@ class OffsetsInjectionBlockProcessor(BlockProcessor):
 
     last_processed_line_idx: int = -1
 
+    is_in_prerender: bool = False
+
     def __init__(self, parser: BlockParser, meta: dict):
         super(OffsetsInjectionBlockProcessor, self).__init__(parser)
         self.meta = meta
 
     def test(self, _, block) -> bool:
+        if self.is_in_prerender:
+            return False
         for i in range(0, len(self.meta["preprocessed_document"])):
             line: str = self.meta["preprocessed_document"][i]
             if len(line) == 0:
@@ -129,9 +133,11 @@ class OffsetsInjectionBlockProcessor(BlockProcessor):
         if start == -1:
             return
 
+        self.is_in_prerender = True
         previous_len = len(parent)
         self.parser.parseBlocks(parent, [block])
         parsed_len = len(parent)
+        self.is_in_prerender = False
 
         blocks.pop(0)
 
