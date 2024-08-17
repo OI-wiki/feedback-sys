@@ -46,6 +46,18 @@ export type GetCommitHashRespBody = {
 	commit_hash: string | undefined;
 };
 
+export type ModifiedCommentBody = {
+	type: 'modified';
+	diff: { tag: 'replace' | 'delete' | 'insert'; i1: number; i2: number; j1: number; j2: number }[];
+};
+
+export type RenamedCommentBody = {
+	type: 'renamed';
+	to: string;
+};
+
+export type PatchCommentBody = ModifiedCommentBody | RenamedCommentBody;
+
 export type ResponseBody<T = {}> = {
 	status: 200;
 	data?: T;

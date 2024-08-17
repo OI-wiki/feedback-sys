@@ -79,3 +79,48 @@ export async function getPaths(env: Env): Promise<string[]> {
 
 	return (await db.prepare('SELECT path FROM pages').all()).results.map((page) => page.path as string);
 }
+
+export async function setPath(env: Env, oldPath: string, newPath: string) {
+	const db = env.DB;
+
+	await db.prepare('UPDATE pages SET path = ? WHERE path = ?').bind(newPath, oldPath).run();
+}
+
+export async function updateCommentOffsets(
+	env: Env,
+	path: string,
+	replacement: {
+		from: {
+			start: number;
+			end: number;
+		};
+		to?: {
+			start: number;
+			end: number;
+		};
+	}[],
+) {
+	const db = env.DB;
+
+	const page = await db.prepare('SELECT * FROM pages WHERE path = ?').bind(path).first();
+
+	if (!page) {
+		return;
+	}
+
+	for (const { from, to } of replacement) {
+		if (!to) {
+			const offset_id = (
+				await db.prepare('SELECT id FROM offsets WHERE page_id = ? AND start = ? AND end = ?').bind(page.id, from.start, from.end).first()
+			)?.id;
+			if (!offset_id) continue;
+			await db.prepare('DELETE FROM comments WHERE offset_id = ?').bind(offset_id).run();
+			await db.prepare('DELETE FROM offsets WHERE id = ?').bind(offset_id).run();
+		} else {
+			await db
+				.prepare('UPDATE offsets SET start = ?, end = ? WHERE page_id = ? AND start = ? AND end = ?')
+				.bind(to.start, to.end, page.id, from.start, from.end)
+				.run();
+		}
+	}
+}
