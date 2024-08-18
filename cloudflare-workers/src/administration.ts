@@ -1,6 +1,27 @@
 import { getComment, getMeta, getPaths, setMeta, setPath, updateCommentOffsets } from './db';
 import { ModifiedCommentBody } from './types';
 
+type Replacement = {
+	from: {
+		start: number;
+		end: number;
+	};
+	to?: {
+		start: number;
+		end: number;
+	};
+};
+
+type Offset = {
+	start: number;
+	end: number;
+};
+
+type OffsetDiff = {
+	len: number;
+	diff: number;
+};
+
 const encoder = new TextEncoder();
 
 export function validateSecret(env: Env, secret: string): boolean {
@@ -30,7 +51,7 @@ export async function renameComments(env: Env, oldPath: string, newPath: string)
 
 	const paths = await getPaths(env);
 	if (!paths.includes(oldPath)) {
-		throw new Error('The path you want to rename from does not exist');
+		return;
 	}
 	if (paths.includes(newPath)) {
 		throw new Error('The path you want to rename to already exists');
@@ -45,35 +66,17 @@ export async function modifyComments(env: Env, path: string, diff: ModifiedComme
 		throw new Error('The path you want to modify does not exist');
 	}
 
-	const replacement: {
-		from: {
-			start: number;
-			end: number;
-		};
-		to?: {
-			start: number;
-			end: number;
-		};
-	}[] = [];
+	const replacement: Replacement[] = [];
 
 	// Sort diff by i1
 	diff = diff.sort((a, b) => a.i1 - b.i1);
 
 	function _calcDiff(
-		offsets: {
-			start: number;
-			end: number;
-		}[],
+		offsets: Offset[],
 		pseudoOffsetsDiffArr: {
-			beforeEverything: {
-				len: number;
-				diff: number;
-			};
+			beforeEverything: OffsetDiff;
 		},
-		offsetsDiffArr: {
-			len: number;
-			diff: number;
-		}[],
+		offsetsDiffArr: OffsetDiff[],
 	) {
 		for (const { tag, i1, i2, j1, j2 } of diff) {
 			// console.log('In diff:', tag, i1, i2, j1, j2);
