@@ -86,6 +86,27 @@ export async function setPath(env: Env, oldPath: string, newPath: string) {
 	await db.prepare('UPDATE pages SET path = ? WHERE path = ?').bind(newPath, oldPath).run();
 }
 
+export async function isPathExists(env: Env, path: string): Promise<boolean>;
+export async function isPathExists(env: Env, ...path: string[]): Promise<boolean[]>;
+export async function isPathExists(env: Env, ...path: string[]): Promise<boolean | boolean[]> {
+	if (typeof path === 'string') {
+		path = [path];
+	}
+
+	const db = env.DB;
+
+	const res = await db
+		.prepare(`SELECT path FROM pages WHERE path IN (${new Array<string>(path.length).fill('?').join(',')})`)
+		.bind(...path)
+		.all<Record<string, string>>();
+
+	if (path.length === 1) {
+		return res.results.length > 0;
+	}
+
+	return path.map((p) => res.results.some((r) => r.path === p));
+}
+
 export async function updateCommentOffsets(
 	env: Env,
 	path: string,

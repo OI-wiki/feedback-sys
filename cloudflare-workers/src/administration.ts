@@ -1,4 +1,4 @@
-import { getComment, getMeta, getPaths, setMeta, setPath, updateCommentOffsets } from './db';
+import { getComment, getMeta, getPaths, isPathExists, setMeta, setPath, updateCommentOffsets } from './db';
 import { ModifiedCommentBody } from './types';
 
 type Replacement = {
@@ -49,11 +49,11 @@ export async function renameComments(env: Env, oldPath: string, newPath: string)
 		throw new Error('The path you want to rename from and to are the same');
 	}
 
-	const paths = await getPaths(env);
-	if (!paths.includes(oldPath)) {
+	const [oldPathExists, newPathExists] = await isPathExists(env, oldPath, newPath);
+	if (!oldPathExists) {
 		return;
 	}
-	if (paths.includes(newPath)) {
+	if (newPathExists) {
 		throw new Error('The path you want to rename to already exists');
 	}
 
@@ -61,8 +61,7 @@ export async function renameComments(env: Env, oldPath: string, newPath: string)
 }
 
 export async function modifyComments(env: Env, path: string, diff: ModifiedCommentBody['diff']) {
-	const paths = await getPaths(env);
-	if (!paths.includes(path)) {
+	if (!(await isPathExists(env, path))) {
 		throw new Error('The path you want to modify does not exist');
 	}
 
