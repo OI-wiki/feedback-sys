@@ -129,19 +129,24 @@ export async function updateCommentOffsets(
 		return;
 	}
 
+	const batch = [];
+
 	for (const { from, to } of replacement) {
 		if (!to) {
 			const offset_id = (
 				await db.prepare('SELECT id FROM offsets WHERE page_id = ? AND start = ? AND end = ?').bind(page.id, from.start, from.end).first()
 			)?.id;
 			if (!offset_id) continue;
-			await db.prepare('DELETE FROM comments WHERE offset_id = ?').bind(offset_id).run();
-			await db.prepare('DELETE FROM offsets WHERE id = ?').bind(offset_id).run();
+			batch.push(db.prepare('DELETE FROM comments WHERE offset_id = ?').bind(offset_id));
+			batch.push(db.prepare('DELETE FROM offsets WHERE id = ?').bind(offset_id));
 		} else {
-			await db
-				.prepare('UPDATE offsets SET start = ?, end = ? WHERE page_id = ? AND start = ? AND end = ?')
-				.bind(to.start, to.end, page.id, from.start, from.end)
-				.run();
+			batch.push(
+				db
+					.prepare('UPDATE offsets SET start = ?, end = ? WHERE page_id = ? AND start = ? AND end = ?')
+					.bind(to.start, to.end, page.id, from.start, from.end),
+			);
 		}
 	}
+
+	await db.batch(batch);
 }
