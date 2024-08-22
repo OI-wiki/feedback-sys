@@ -62,3 +62,8 @@ export type ResponseBody<T = {}> = {
 	status: 200;
 	data?: T;
 };
+
+export type Offset = {
+	start: number;
+	end: number;
+};

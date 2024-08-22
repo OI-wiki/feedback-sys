@@ -1,5 +1,5 @@
-import { getComment, getMeta, getPaths, isPathExists, setMeta, setPath, updateCommentOffsets } from './db';
-import { ModifiedCommentBody } from './types';
+import { getComment, getMeta, getOffsets, getPaths, isPathExists, setMeta, setPath, updateCommentOffsets } from './db';
+import { ModifiedCommentBody, Offset } from './types';
 
 type Replacement = {
 	from: {
@@ -10,11 +10,6 @@ type Replacement = {
 		start: number;
 		end: number;
 	};
-};
-
-type Offset = {
-	start: number;
-	end: number;
 };
 
 type OffsetDiff = {
@@ -175,11 +170,7 @@ export async function modifyComments(env: Env, path: string, diff: ModifiedComme
 	}
 
 	// Distinct offsets
-	const offsets = [
-		...new Map((await getComment(env, { path })).map((comment) => comment.offset).map((offset) => [offset.start, offset.end])).entries(),
-	]
-		.map(([start, end]) => ({ start, end }))
-		.sort((a, b) => a.start - b.start);
+	const offsets = (await getOffsets(env, path)).sort((a, b) => a.start - b.start);
 
 	if (offsets.length === 0) {
 		return;

@@ -1,4 +1,4 @@
-import { GetComment, GetCommentRespBody, PostComment } from './types';
+import { GetComment, GetCommentRespBody, Offset, PostComment } from './types';
 
 export async function postComment(env: Env, req: PostComment) {
 	const db = env.DB;
@@ -105,6 +105,21 @@ export async function isPathExists(env: Env, ...path: string[]): Promise<boolean
 	}
 
 	return path.map((p) => res.results.some((r) => r.path === p));
+}
+
+export async function getOffsets(env: Env, path: string): Promise<Offset[]> {
+	const db = env.DB;
+
+	const page = await db.prepare('SELECT * FROM pages WHERE path = ?').bind(path).first();
+
+	if (!page) {
+		return [];
+	}
+
+	return (await db.prepare('SELECT * FROM offsets WHERE page_id = ?').bind(page.id).all()).results.map((offset) => ({
+		start: offset.start as number,
+		end: offset.end as number,
+	}));
 }
 
 export async function updateCommentOffsets(
