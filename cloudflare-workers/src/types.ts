@@ -67,3 +67,14 @@ export type Offset = {
 	start: number;
 	end: number;
 };
+
+export type Replacement = {
+	from: {
+		start: number;
+		end: number;
+	};
+	to?: {
+		start: number;
+		end: number;
+	};
+};
