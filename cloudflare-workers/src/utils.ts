@@ -22,7 +22,7 @@ export function calcOffsetModification(offsets: Offset[], diff: ModifiedCommentB
 						delta.endDelta += insertedLength;
 					}
 					// 插入点在该区间内
-					else if (start <= i1 && i1 <= end) {
+					else if (start <= i1 && i1 < end) {
 						delta.endDelta += insertedLength;
 					}
 					// 插入点在该区间外不需要变动
@@ -50,7 +50,7 @@ export function calcOffsetModification(offsets: Offset[], diff: ModifiedCommentB
 						delta.endDelta += deltaLength - (i2 - start);
 					}
 					// 替换点右半边在该区间外，左半边在该区间内
-					else if (i2 > end && i1 >= start && i1 <= end) {
+					else if (i2 > end && i1 >= start && i1 < end) {
 						delta.endDelta += i1 - end;
 					}
 					// 替换点包括整个区间
