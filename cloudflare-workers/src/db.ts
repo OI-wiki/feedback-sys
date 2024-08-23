@@ -110,16 +110,12 @@ export async function isPathExists(env: Env, ...path: string[]): Promise<boolean
 export async function getOffsets(env: Env, path: string): Promise<Offset[]> {
 	const db = env.DB;
 
-	const page = await db.prepare('SELECT * FROM pages WHERE path = ?').bind(path).first();
-
-	if (!page) {
-		return [];
-	}
-
-	return (await db.prepare('SELECT * FROM offsets WHERE page_id = ?').bind(page.id).all()).results.map((offset) => ({
-		start: offset.start as number,
-		end: offset.end as number,
-	}));
+	return (await db.prepare('SELECT * FROM offsets JOIN pages ON offsets.page_id = pages.id WHERE path = ?').bind(path).all()).results.map(
+		(offset) => ({
+			start: offset.start as number,
+			end: offset.end as number,
+		}),
+	);
 }
 
 export async function updateCommentOffsets(
