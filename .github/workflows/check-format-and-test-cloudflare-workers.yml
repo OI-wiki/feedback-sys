@@ -28,3 +28,26 @@ jobs:
         with:
           cmd: prettier --check .
           dir: cloudflare-workers
+
+  test:
+    name: Test PR
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./cloudflare-workers
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        name: Set Node.js 20.x
+        with:
+          node-version: 20.x
+      - uses: borales/actions-yarn@v5
+        name: Run install
+        with:
+          cmd: install
+          dir: cloudflare-workers
+      - uses: borales/actions-yarn@v5
+        name: Run Tests
+        with:
+          cmd: test
+          dir: cloudflare-workers
