@@ -3,7 +3,7 @@ import { ModifiedCommentBody, Offset, Replacement } from './types';
 type OffsetDelta = {
 	startDelta: number;
 	endDelta: number;
-	invaild?: boolean;
+	invalid?: boolean;
 };
 
 export function calcOffsetModification(offsets: Offset[], diff: ModifiedCommentBody['diff']): Replacement[] {
@@ -55,7 +55,7 @@ export function calcOffsetModification(offsets: Offset[], diff: ModifiedCommentB
 					}
 					// 替换点包括整个区间
 					else if (i1 < start && i2 > end) {
-						delta.invaild = true;
+						delta.invalid = true;
 					}
 					// 替换点在该区间后不需要变动
 
@@ -69,7 +69,7 @@ export function calcOffsetModification(offsets: Offset[], diff: ModifiedCommentB
 
 	for (let i = 0; i < offsets.length; i++) {
 		const { start, end } = offsets[i];
-		const { startDelta, endDelta, invaild } = offsetsDelta[i];
+		const { startDelta, endDelta, invalid: invaild } = offsetsDelta[i];
 		replacement.push({
 			from: {
 				start: start,
