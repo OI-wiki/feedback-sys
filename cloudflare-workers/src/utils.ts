@@ -9,6 +9,7 @@ type OffsetDelta = {
 export function calcOffsetModification(offsets: Offset[], diff: ModifiedCommentBody['diff']): Replacement[] {
 	const offsetsDelta: OffsetDelta[] = Array.from({ length: offsets.length }, () => ({ startDelta: 0, endDelta: 0 }));
 
+	// i1, i2, j1, j2, start, end 均为左闭右开
 	for (const { tag, i1, i2, j1, j2 } of diff) {
 		for (let i = 0; i < offsets.length; i++) {
 			const { start, end } = offsets[i];
@@ -33,7 +34,7 @@ export function calcOffsetModification(offsets: Offset[], diff: ModifiedCommentB
 				case 'delete':
 				case 'replace': {
 					// 替换点在该区间前
-					if (i2 < start) {
+					if (i2 <= start) {
 						const deltaLength = j2 - j1 - (i2 - i1);
 						delta.startDelta += deltaLength;
 						delta.endDelta += deltaLength;
@@ -44,17 +45,17 @@ export function calcOffsetModification(offsets: Offset[], diff: ModifiedCommentB
 						delta.endDelta += deltaLength;
 					}
 					// 替换点右半边在该区间内，左半边在该区间外
-					else if (i1 < start && i2 >= start && i2 <= end) {
+					else if (i1 < start && i2 > start && i2 <= end) {
 						const deltaLength = i1 - start; // 获取替换部分
 						delta.startDelta += deltaLength;
 						delta.endDelta += deltaLength - (i2 - start);
 					}
 					// 替换点右半边在该区间外，左半边在该区间内
-					else if (i2 > end && i1 >= start && i1 < end) {
+					else if (i2 >= end && i1 >= start && i1 < end) {
 						delta.endDelta += i1 - end;
 					}
 					// 替换点包括整个区间
-					else if (i1 < start && i2 > end) {
+					else if (i1 < start && i2 >= end) {
 						delta.invalid = true;
 					}
 					// 替换点在该区间后不需要变动
