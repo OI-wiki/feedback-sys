@@ -48,6 +48,7 @@ export type GetCommitHashRespBody = {
 
 export type ModifiedCommentBody = {
 	type: 'modified';
+	// @see: https://docs.python.org/3/library/difflib.html#difflib.SequenceMatcher.get_opcodes
 	diff: { tag: 'replace' | 'delete' | 'insert'; i1: number; i2: number; j1: number; j2: number }[];
 };
 
