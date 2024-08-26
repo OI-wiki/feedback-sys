@@ -48,6 +48,8 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           secrets: |
             ADMINISTRATOR_SECRET
+            TELEGRAM_BOT_TOKEN
+            TELEGRAM_CHAT_ID
           preCommands: |
             wrangler d1 execute comments --yes --file=schema.sql
         env:
