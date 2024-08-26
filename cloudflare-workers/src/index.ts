@@ -14,7 +14,14 @@
 import { AutoRouter, cors, error } from 'itty-router';
 import { GetCommentBody, GetCommentRespBody, PatchCommentBody, PostCommentBody, PutCommitHashBody, ResponseBody } from './types';
 import { getComment, postComment } from './db';
-import { validateSecret, setCommitHash, compareCommitHash, modifyComments, renameComments } from './administration';
+import {
+	validateSecret,
+	setCommitHash,
+	compareCommitHash,
+	modifyComments,
+	renameComments,
+	sendCommentUpdateToTelegram,
+} from './administration';
 import { matchCommentCache, purgeAllCommentCache, purgeCommentCache, putCommentCache } from './cache';
 
 const { preflight, corsify } = cors({
@@ -73,7 +80,7 @@ router.post('/comment/:path', async (req, env, ctx) => {
 		return error(409, 'Commit hash mismatch, usually due to outdated cache or running CI/CD, please retry after a few minutes');
 	}
 
-	await postComment(env, {
+	const data = {
 		path: params.path,
 		offset: body.offset,
 		commenter: {
@@ -82,7 +89,11 @@ router.post('/comment/:path', async (req, env, ctx) => {
 			ip_address: req.headers.get('cf-connecting-ip') ?? '127.0.0.1', // In development environment, cf-connecting-ip header will be null
 		},
 		comment: body.comment,
-	});
+	};
+
+	await postComment(env, data);
+
+	ctx.waitUntil(sendCommentUpdateToTelegram(env, data));
 
 	const cache = caches.default;
 	ctx.waitUntil(purgeCommentCache(env, cache, new URL(req.url).origin, params.path));

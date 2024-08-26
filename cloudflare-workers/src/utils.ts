@@ -6,6 +6,13 @@ type OffsetDelta = {
 	invalid?: boolean;
 };
 
+type TelegramBotAPIResponse =
+	| { ok: false; error_code: number; description?: string }
+	| {
+			ok: true;
+			result: unknown;
+	  };
+
 export function calcOffsetModification(offsets: Offset[], diff: ModifiedCommentBody['diff']): Replacement[] {
 	const offsetsDelta: OffsetDelta[] = Array.from({ length: offsets.length }, () => ({ startDelta: 0, endDelta: 0 }));
 
@@ -87,4 +94,26 @@ export function calcOffsetModification(offsets: Offset[], diff: ModifiedCommentB
 	}
 
 	return replacement;
+}
+
+export async function sendTelegramMessage(botToken: string, chatId: string, message: string) {
+	const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+	const response = await fetch(url, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({
+			chat_id: chatId,
+			text: message,
+			parse_mode: 'MarkdownV2',
+		}),
+	});
+
+	const result: TelegramBotAPIResponse = (await response.json()) as TelegramBotAPIResponse;
+
+	if (!response.ok || !result.ok) {
+		throw new Error(`Failed to send message to telegram: ${JSON.stringify(result)}`);
+	}
 }
