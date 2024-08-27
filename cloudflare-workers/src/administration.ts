@@ -70,7 +70,7 @@ export async function sendCommentUpdateToTelegram(env: Env, req: PostComment) {
 			title = titleElement.text;
 		}
 		const paragraphElement = root.querySelector(
-			`p[data-original-document-start="${req.offset.start}"][data-original-document-end="${req.offset.end}"]`,
+			`[data-original-document-start="${req.offset.start}"][data-original-document-end="${req.offset.end}"]`,
 		);
 		if (paragraphElement) {
 			offset = paragraphElement.text;
