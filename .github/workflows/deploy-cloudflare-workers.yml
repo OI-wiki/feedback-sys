@@ -54,6 +54,8 @@ jobs:
             wrangler d1 execute comments --yes --file=schema.sql
         env:
           ADMINISTRATOR_SECRET: ${{ secrets.ADMINISTRATOR_SECRET }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
   upload-artifacts:
     name: Upload Artifacts
     runs-on: ubuntu-latest
