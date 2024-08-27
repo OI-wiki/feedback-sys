@@ -97,7 +97,7 @@ export function calcOffsetModification(offsets: Offset[], diff: ModifiedCommentB
 }
 
 export function escapeTelegramMarkdown(text: string): string {
-	return text.replace(/([_*[\]()~`>#+\-=|{}.!])/g, '\\$1')
+	return text.replace(/([_*[\]()~`>#+\-=|{}.!])/g, '\\$1');
 }
 
 export async function sendTelegramMessage(botToken: string, chatId: string, message: string) {
