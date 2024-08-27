@@ -1,6 +1,7 @@
 import { getMeta, getOffsets, isPathExists, setMeta, setPath, updateCommentOffsets } from './db';
 import { ModifiedCommentBody, Offset, PostComment } from './types';
 import { calcOffsetModification, escapeTelegramMarkdown, sendTelegramMessage } from './utils';
+import { parse } from 'node-html-parser';
 
 const encoder = new TextEncoder();
 
@@ -55,10 +56,36 @@ export async function modifyComments(env: Env, path: string, diff: ModifiedComme
 }
 
 export async function sendCommentUpdateToTelegram(env: Env, req: PostComment) {
-	const message = `💬 New paragraph comment on `
-	+ `[${escapeTelegramMarkdown(`${req.path}(${req.offset.start}-${req.offset.end})`)}](${escapeTelegramMarkdown(`https://oi-wiki.org${req.path}`)})\n`
-	+ `by ${escapeTelegramMarkdown(req.commenter.name)}\n\n`
-	+ `${escapeTelegramMarkdown(req.comment)}`;
+	let title = req.path;
+	let offset = `${req.offset.start}-${req.offset.end}`;
+
+	const url = `https://oi-wiki.org${req.path}`;
+	const response = await fetch(url);
+
+	if (response.ok) {
+		const html = await response.text();
+		const root = parse(html);
+		const titleElement = root.querySelector('title');
+		if (titleElement) {
+			title = titleElement.text;
+		}
+		const paragraphElement = root.querySelector(
+			`p[data-original-document-start="${req.offset.start}"][data-original-document-end="${req.offset.end}"]`,
+		);
+		if (paragraphElement) {
+			offset = paragraphElement.text;
+			if (offset.length > 100) {
+				offset = offset.substring(0, 100) + '...';
+			}
+		}
+	}
+
+	const message =
+		`💬 New paragraph comment on ` +
+		`[${escapeTelegramMarkdown(`${title}`)}](${escapeTelegramMarkdown(`https://oi-wiki.org${req.path}`)})\n` +
+		`> ${escapeTelegramMarkdown(offset)}\n` +
+		`by ${escapeTelegramMarkdown(req.commenter.name)}\n\n` +
+		`${escapeTelegramMarkdown(req.comment)}`;
 
 	await Promise.all(env.TELEGRAM_CHAT_ID.split(',').map((chatId) => sendTelegramMessage(env.TELEGRAM_BOT_TOKEN, chatId, message)));
 }
