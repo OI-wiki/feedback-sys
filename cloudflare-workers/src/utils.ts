@@ -96,6 +96,10 @@ export function calcOffsetModification(offsets: Offset[], diff: ModifiedCommentB
 	return replacement;
 }
 
+export function escapeTelegramMarkdown(text: string): string {
+	return text.replace(/([_*[\]()~`>#+\-=|{}.!])/g, '\\$1')
+}
+
 export async function sendTelegramMessage(botToken: string, chatId: string, message: string) {
 	const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
 

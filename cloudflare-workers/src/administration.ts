@@ -1,6 +1,6 @@
 import { getMeta, getOffsets, isPathExists, setMeta, setPath, updateCommentOffsets } from './db';
 import { ModifiedCommentBody, Offset, PostComment } from './types';
-import { calcOffsetModification, sendTelegramMessage } from './utils';
+import { calcOffsetModification, escapeTelegramMarkdown, sendTelegramMessage } from './utils';
 
 const encoder = new TextEncoder();
 
@@ -55,7 +55,10 @@ export async function modifyComments(env: Env, path: string, diff: ModifiedComme
 }
 
 export async function sendCommentUpdateToTelegram(env: Env, req: PostComment) {
-	const message = `💬 New paragraph comment on [${req.path}\\(${req.offset.start}\\-${req.offset.end}\\)](https://oi-wiki.org${req.path})\nby ${req.commenter.name}\n\n${req.comment}`;
+	const message = `💬 New paragraph comment on `
+	+ `[${escapeTelegramMarkdown(`${req.path}(${req.offset.start}-${req.offset.end})`)}](${escapeTelegramMarkdown(`https://oi-wiki.org${req.path}`)})\n`
+	+ `by ${escapeTelegramMarkdown(req.commenter.name)}\n\n`
+	+ `${escapeTelegramMarkdown(req.comment)}`;
 
 	await Promise.all(env.TELEGRAM_CHAT_ID.split(',').map((chatId) => sendTelegramMessage(env.TELEGRAM_BOT_TOKEN, chatId, message)));
 }
