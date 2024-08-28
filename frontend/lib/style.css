@@ -264,6 +264,10 @@
     }
   }
 
+  & .comment.comment_pending {
+    opacity: 0.5;
+  }
+
   & .comment_main {
     position: relative;
 

@@ -23,6 +23,7 @@ type Comment = {
   };
   comment: string;
   created_time: string;
+  pending?: boolean;
 };
 
 const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
@@ -176,6 +177,7 @@ const _openCommentsPanel = async () => {
       },
       comment: "",
       created_time: new Date().toISOString(),
+      pending: true,
     });
   }
 
@@ -224,7 +226,7 @@ const _submitComment = async ({
     comment: content,
   };
 
-  const res = await fetch(
+  const res = fetch(
     `${apiEndpoint}comment/${encodeURIComponent(new URL(window.location.href).pathname)}`,
     {
       method: "POST",
@@ -237,16 +239,30 @@ const _submitComment = async ({
       }),
     },
   );
-  if (!res.ok) {
-    throw res;
-  }
 
+  const id = commentsCache?.length ?? -1;
   if (commentsCache) {
     commentsCache.push({
       ...comment,
-      id: commentsCache.length,
+      id,
       created_time: new Date().toISOString(),
+      pending: true,
     });
+  }
+
+  const resp = await res;
+
+  if (!resp.ok) {
+    if (commentsCache) {
+      commentsCache = commentsCache.filter((it) => it.id !== id);
+    }
+    throw resp;
+  }
+
+  if (commentsCache) {
+    commentsCache = commentsCache.map((it) =>
+      it.id === id ? { ...it, pending: false } : it,
+    );
   }
 
   _updateAvailableComments();
@@ -374,13 +390,10 @@ const _renderComments = (comments: Comment[]) => {
               content: textarea.value,
             })
               .then(() => {
-                textarea.disabled = false;
                 textarea.value = "";
                 notification.textContent = "";
-                submitButton.disabled = false;
-
-                _openCommentsPanel();
               })
+
               .catch(async (e) => {
                 console.error(e);
 
@@ -403,10 +416,31 @@ const _renderComments = (comments: Comment[]) => {
                 } else {
                   notification.textContent = "提交失败，请稍后再试";
                 }
-
-                textarea.disabled = false;
-                submitButton.disabled = false;
+              })
+              .finally(() => {
+                _openCommentsPanel().then(() => {
+                  const newNotification = commentsPanel.querySelector(
+                    ".review_selected .comment_reply_notification",
+                  );
+                  const newInput = commentsPanel.querySelector(
+                    ".review_selected .comment_reply_panel input",
+                  ) as HTMLInputElement;
+                  const newTextArea = commentsPanel.querySelector(
+                    ".review_selected .comment_reply_panel textarea",
+                  ) as HTMLTextAreaElement;
+                  if (newNotification) {
+                    newNotification.textContent = notification.textContent;
+                  }
+                  if (newInput) {
+                    newInput.value = input.value;
+                  }
+                  if (newTextArea) {
+                    newTextArea.value = textarea.value;
+                  }
+                });
               });
+
+            _openCommentsPanel();
             break;
         }
       });
@@ -442,6 +476,9 @@ const _renderComments = (comments: Comment[]) => {
     for (const comment of commentsGroup) {
       const commentEl = document.createElement("div");
       commentEl.classList.add("comment");
+      if (comment.pending) {
+        commentEl.classList.add("comment_pending");
+      }
       commentEl.innerHTML = `
         <div class="comment_header">
           <span class="comment_commenter"></span>
