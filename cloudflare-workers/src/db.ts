@@ -20,37 +20,21 @@ export async function postComment(env: Env, req: PostComment) {
 		offset = (await db.prepare('SELECT last_insert_rowid() AS id').first())!;
 	}
 
-	const user = await db
-		.prepare('SELECT id FROM commenters WHERE oauth_provider = ? AND oauth_user_id = ?')
-		.bind(req.commenter.oauth_provider, req.commenter.oauth_user_id)
-		.first();
-	if (!user) {
-		throw new Error('User not found, please try to re-login.');
-	}
-	const commiterId = user.id;
-
 	await db
-		.prepare('INSERT INTO comments (offset_id, commenter_id, comment, created_time) VALUES (?, ?, ?, ?)')
-		.bind(offset.id, commiterId, req.comment, new Date().toISOString())
+		.prepare(
+			'INSERT INTO comments (offset_id, commenter_id, comment, created_time) VALUES (?, (SELECT id FROM commenters WHERE oauth_provider = ? AND oauth_user_id = ?), ?, ?)',
+		)
+		.bind(offset.id, req.commenter.oauth_provider, req.commenter.oauth_user_id, req.comment, new Date().toISOString())
 		.run();
 }
 
 export async function registerUser(env: Env, name: string, oauth_provider: string, oauth_user_id: string) {
 	const db = env.DB;
 
-	const user = await db
-		.prepare('SELECT id, name FROM commenters WHERE oauth_provider = ? AND oauth_user_id = ?')
-		.bind(oauth_provider, oauth_user_id)
-		.first();
-	if (user) {
-		if (user.name !== name) {
-			await db.prepare('UPDATE commenters SET name = ? WHERE id = ?').bind(name, user.id).run();
-		}
-		return;
-	}
-
 	await db
-		.prepare('INSERT INTO commenters (name, oauth_provider, oauth_user_id) VALUES (?, ?, ?)')
+		.prepare(
+			'INSERT INTO commenters (name, oauth_provider, oauth_user_id) VALUES (?, ?, ?) ON CONFLICT(oauth_provider, oauth_user_id) DO UPDATE SET name = excluded.name',
+		)
 		.bind(name, oauth_provider, oauth_user_id)
 		.run();
 }
