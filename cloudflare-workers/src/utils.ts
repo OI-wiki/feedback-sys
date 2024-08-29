@@ -1,4 +1,5 @@
 import { ModifiedCommentBody, Offset, Replacement } from './types';
+import jwt from '@tsndr/cloudflare-worker-jwt';
 
 type OffsetDelta = {
 	startDelta: number;
@@ -120,4 +121,34 @@ export async function sendTelegramMessage(botToken: string, chatId: string, mess
 	if (!response.ok || !result.ok) {
 		throw new Error(`Failed to send message to telegram: ${JSON.stringify(result)}`);
 	}
+}
+
+export async function signJWT(
+	payload: {
+		[key: string]: any;
+	},
+	secret: string,
+): Promise<string> {
+	return await jwt.sign(
+		{
+			...payload,
+			nbf: Math.floor(Date.now() / 1000),
+			exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7 days
+		},
+		secret,
+		{ algorithm: 'HS256' },
+	);
+}
+
+export async function verifyAndDecodeJWT(
+	token: string,
+	secret: string,
+): Promise<{
+	[key: string]: any;
+}> {
+	await jwt.verify(token, secret, { algorithm: 'HS256', throwError: true });
+
+	return jwt.decode(token).payload as {
+		[key: string]: any;
+	};
 }

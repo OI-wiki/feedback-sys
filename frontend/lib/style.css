@@ -301,7 +301,7 @@
     background-color: var(--review-on-text-color);
   }
 
-  & .comment_reply_panel input {
+  & .comment_reply_panel .comment_username {
     width: 100%;
 
     padding: 3px;
@@ -313,16 +313,25 @@
 
     color: var(--review-text-color);
     background-color: var(--review-on-text-color);
+
+    font-size: 12px;
   }
 
   &
     .comment_reply_panel
-    :is(textarea:invalid, input:invalid)
-    ~ .comment_reply_actions {
+    textarea:invalid
+    ~ .comment_actions.comment_actions_reply {
     display: none;
   }
 
-  & .comment_reply_actions {
+  &
+    .comment_reply_panel
+    .comment_actions_login:not([style*="display: none"])
+    ~ .comment_actions.comment_actions_reply {
+    display: none;
+  }
+
+  & .comment_actions {
     display: flex;
     justify-content: flex-end;
     align-items: center;

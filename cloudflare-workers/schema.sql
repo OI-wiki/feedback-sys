@@ -21,10 +21,11 @@ CREATE INDEX IF NOT EXISTS idx_page_id ON `offsets`(`page_id`);
 
 CREATE TABLE IF NOT EXISTS `commenters`(
     `id` INTEGER PRIMARY KEY AUTOINCREMENT,
-    `name` TEXT NOT NULL,
-    `user_agent` TEXT NOT NULL,
-    `ip_address` TEXT NOT NULL
+    `oauth_provider` TEXT NOT NULL,
+    `oauth_user_id` TEXT NOT NULL UNIQUE,
+    `name` TEXT NOT NULL
 );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_oauth_provider_oauth_user_id ON `commenters`(`oauth_provider`, `oauth_user_id`);
 
 CREATE TABLE IF NOT EXISTS `comments` (
     `id` INTEGER PRIMARY KEY AUTOINCREMENT,

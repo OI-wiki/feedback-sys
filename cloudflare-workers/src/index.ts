@@ -12,8 +12,16 @@
  */
 
 import { AutoRouter, cors, error } from 'itty-router';
-import { GetCommentBody, GetCommentRespBody, PatchCommentBody, PostCommentBody, PutCommitHashBody, ResponseBody } from './types';
-import { getComment, postComment } from './db';
+import {
+	GetCommentBody,
+	GetCommentRespBody,
+	OAuthState,
+	PatchCommentBody,
+	PostCommentBody,
+	PutCommitHashBody,
+	ResponseBody,
+} from './types';
+import { getComment, postComment, registerUser } from './db';
 import {
 	validateSecret,
 	setCommitHash,
@@ -23,6 +31,8 @@ import {
 	sendCommentUpdateToTelegram,
 } from './administration';
 import { matchCommentCache, purgeAllCommentCache, purgeCommentCache, putCommentCache } from './cache';
+import { signJWT, verifyAndDecodeJWT } from './utils';
+import { getAccessToken, getUserInfo } from './oauth';
 
 const { preflight, corsify } = cors({
 	origin: 'https://oi-wiki.org',
@@ -54,11 +64,9 @@ router.post('/comment/:path', async (req, env, ctx) => {
 	if (
 		body == undefined ||
 		body.offset == undefined ||
-		body.commenter == undefined ||
 		body.comment == undefined ||
 		body.offset.start == undefined ||
 		body.offset.end == undefined ||
-		body.commenter.name == undefined ||
 		body.commit_hash == undefined
 	) {
 		return error(400, 'Invalid request body');
@@ -66,10 +74,6 @@ router.post('/comment/:path', async (req, env, ctx) => {
 
 	if (body.offset.start < 0 || body.offset.end < 0 || body.offset.start >= body.offset.end) {
 		return error(400, 'Invalid offset');
-	}
-
-	if (body.commenter.name.length < 1 || body.commenter.name.length > 128) {
-		return error(400, 'Invalid commenter name');
 	}
 
 	if (body.comment.length < 1 || body.comment.length > 65535) {
@@ -80,13 +84,31 @@ router.post('/comment/:path', async (req, env, ctx) => {
 		return error(409, 'Commit hash mismatch, usually due to outdated cache or running CI/CD, please retry after a few minutes');
 	}
 
+	const authorization = req.headers.get('Authorization');
+
+	if (!authorization) {
+		return error(401, 'Unauthorized');
+	}
+
+	const [scheme, secret] = authorization.split(' ');
+
+	if (scheme !== 'Bearer' || !secret) {
+		return error(400, 'Malformed authorization header');
+	}
+
+	let token;
+	try {
+		token = await verifyAndDecodeJWT(secret, env.OAUTH_JWT_SECRET);
+	} catch (e) {
+		return error(401, 'Unauthorized');
+	}
+
 	const data = {
 		path: params.path,
 		offset: body.offset,
 		commenter: {
-			name: body.commenter.name,
-			user_agent: req.headers.get('user-agent')!,
-			ip_address: req.headers.get('cf-connecting-ip') ?? '127.0.0.1', // In development environment, cf-connecting-ip header will be null
+			oauth_provider: 'github',
+			oauth_user_id: token.id + '',
 		},
 		comment: body.comment,
 	};
@@ -192,6 +214,45 @@ router.patch('/comment/:path', async (req, env, ctx) => {
 	return {
 		status: 200,
 	} satisfies ResponseBody;
+});
+
+router.get('/meta/github-app', async (req, env, ctx) => {
+	return {
+		status: 200,
+		data: {
+			client_id: env.GITHUB_APP_CLIENT_ID,
+		},
+	} satisfies ResponseBody;
+});
+
+router.get('/oauth/callback', async (req, env, ctx) => {
+	const code = req.query['code'] as string | undefined;
+	const rawState = req.query['state'] as string | undefined;
+
+	if (code == undefined || rawState == undefined) {
+		return error(400, 'Invalid request');
+	}
+
+	const state: OAuthState = JSON.parse(decodeURIComponent(rawState as string));
+
+	if (state == undefined || state.redirect == undefined) {
+		return error(400, 'Invalid request');
+	}
+
+	const token = await getAccessToken(env, code);
+	const userInfo = await getUserInfo(token);
+
+	const jwt = await signJWT({ id: userInfo.id, name: userInfo.name }, env.OAUTH_JWT_SECRET);
+
+	await registerUser(env, userInfo.name, 'github', userInfo.id + '');
+
+	return new Response(null, {
+		status: 302,
+		headers: {
+			// 这样设计而不是 Set-Cookie 是因为跨站 Set-Cookie 不好做
+			Location: `${state.redirect}?oauth_token=${jwt}`,
+		},
+	});
 });
 
 router.put('/meta/commithash', async (req, env, ctx) => {

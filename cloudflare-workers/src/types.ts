@@ -3,17 +3,14 @@ export type PostCommentBody = {
 		start: number;
 		end: number;
 	};
-	commenter: {
-		name: string;
-	};
 	comment: string;
 	commit_hash: string;
 };
 
 export type PostComment = {
 	commenter: {
-		user_agent: string;
-		ip_address: string | null;
+		oauth_provider: string;
+		oauth_user_id: string;
 	};
 } & Omit<PostCommentBody, 'commit_hash'> & {
 		path: string;
@@ -78,4 +75,15 @@ export type Replacement = {
 		start: number;
 		end: number;
 	};
+};
+
+export type OAuthState = {
+	redirect: string;
+};
+
+export type GitHubGetUserInfoResp = {
+	login: string;
+	id: number;
+	name: string;
+	email: string;
 };
