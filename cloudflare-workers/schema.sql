@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS `offsets` (
     `start` INTEGER NOT NULL,
     `end` INTEGER NOT NULL,
     FOREIGN KEY(`page_id`) REFERENCES `pages`(`id`)
+	UNIQUE(`page_id`, `start`, `end`)
 );
 CREATE INDEX IF NOT EXISTS idx_offsets ON `offsets`(`start`, `end`);
 CREATE INDEX IF NOT EXISTS idx_page_id ON `offsets`(`page_id`);
