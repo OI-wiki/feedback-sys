@@ -26,6 +26,15 @@ type Comment = {
   pending?: boolean;
 };
 
+type GitHubMeta = {
+  client_id: string;
+};
+
+type GitHubUserInfo = {
+  id: number;
+  name: string;
+};
+
 const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: "short",
   timeStyle: "short",
@@ -40,6 +49,43 @@ let commentsCache: Comment[] | undefined;
 
 let commentsButton: HTMLElement;
 let commentsPanel: HTMLElement;
+
+let githubMeta: GitHubMeta;
+
+const _fetchGitHubMeta = async () => {
+  const res = await fetch(`${apiEndpoint}meta/github-app`, {
+    method: "GET",
+  });
+
+  if (!res.ok) {
+    throw res;
+  }
+
+  if (!githubMeta) githubMeta = (await res.json()).data;
+};
+
+const _handleOAuthToken = () => {
+  const url = new URL(window.location.href);
+  const token = url.searchParams.get("oauth_token");
+  if (!token) return;
+  document.cookie = `oauth_token=${token}; path=/; expires=${new Date(JSON.parse(atob(token.split(".")[1])).exp * 1000).toUTCString()}; secure`;
+  window.history.replaceState(null, "", url.pathname);
+};
+
+const _getJWT = () => {
+  return document.cookie.replace(
+    /(?:(?:^|.*;\s*)oauth_token\s*\=\s*([^;]*).*$)|^.*$/,
+    "$1",
+  );
+};
+
+const _getUserInfo = () => {
+  const jwt = _getJWT();
+  if (!jwt) return;
+  const payload = atob(jwt.split(".")[1]);
+
+  return JSON.parse(payload) as GitHubUserInfo;
+};
 
 const _registerDialog = ({
   id,
@@ -203,11 +249,9 @@ const _closeCommentsPanel = () => {
 
 const _submitComment = async ({
   offsets,
-  username,
   content,
 }: {
   offsets: [number, number];
-  username: string;
   content: string;
 }) => {
   const commitHash = sessionStorage.getItem("commitHash");
@@ -220,9 +264,6 @@ const _submitComment = async ({
       start: offsets[0],
       end: offsets[1],
     },
-    commenter: {
-      name: username,
-    },
     comment: content,
   };
 
@@ -232,6 +273,7 @@ const _submitComment = async ({
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${_getJWT()}`,
       },
       body: JSON.stringify({
         ...comment,
@@ -244,7 +286,10 @@ const _submitComment = async ({
   if (commentsCache) {
     commentsCache.push({
       ...comment,
-      id,
+      commenter: {
+        name: _getUserInfo()?.name ?? "未知用户",
+      },
+      id: commentsCache.length,
       created_time: new Date().toISOString(),
       pending: true,
     });
@@ -319,12 +364,16 @@ const _renderComments = (comments: Comment[]) => {
       <div class="comments_group_main"></div>
       <div class="comments_group_footer">
         <div class="comment_reply_panel">
-          <input required placeholder="署名为..." maxlength="255"></input>
+          <div class="comment_username"></div>
           <textarea required placeholder="写下你的评论..."  autocapitalize="sentences" autocomplete="on" spellcheck="true" autofocus="true" maxlength="65535"></textarea>
-          <div class="comment_reply_actions">
+          <div class="comment_actions comment_actions_login">
+            <button class="comment_reply_item comment_reply_item_primary" data-action="login">登录到 GitHub</button>
+          </div>
+          <div class="comment_actions comment_actions_reply">
             <span class="comment_reply_notification"></span>
             <button class="comment_reply_item" data-action="cancel">取消</button>
             <button class="comment_reply_item comment_reply_item_primary" data-action="submit">提交</button>
+          </div>
         </div>
       </div>
     `.trim();
@@ -337,15 +386,27 @@ const _renderComments = (comments: Comment[]) => {
         element.style.height = element.scrollHeight + "px";
       });
 
-    container
-      .querySelector(".comment_reply_actions")
-      ?.addEventListener("click", (e) => {
+    const username = container.querySelector(
+      ".comment_username",
+    ) as HTMLDivElement;
+
+    const commentActionsLogin = container.querySelector(
+      ".comment_actions_login",
+    ) as HTMLDivElement;
+
+    const userInfo = _getUserInfo();
+    if (!userInfo) {
+      username.textContent = "登录到 GitHub 以发表评论";
+    } else {
+      username.textContent = `作为 ${userInfo.name} 发表评论`;
+      commentActionsLogin.style.display = "none";
+    }
+
+    for (const actions of container.querySelectorAll(".comment_actions")) {
+      actions.addEventListener("click", (e) => {
         if (!(e.target instanceof HTMLButtonElement)) return;
         const target = e.target as HTMLButtonElement;
 
-        const input = container.querySelector(
-          ".comment_reply_panel input",
-        ) as HTMLInputElement;
         const textarea = container.querySelector(
           ".comment_reply_panel textarea",
         ) as HTMLTextAreaElement;
@@ -359,6 +420,13 @@ const _renderComments = (comments: Comment[]) => {
         ) as HTMLButtonElement;
 
         switch (target?.dataset.action) {
+          case "login":
+            if (!githubMeta) {
+              console.log("githubMeta not ready");
+              return;
+            }
+            window.location.href = `https://github.com/login/oauth/authorize?client_id=${githubMeta.client_id}&state=${encodeURIComponent(JSON.stringify({ redirect: window.location.href }))}`;
+            break;
           case "cancel":
             textarea.disabled = false;
             textarea.value = "";
@@ -368,11 +436,6 @@ const _renderComments = (comments: Comment[]) => {
           case "submit":
             textarea.disabled = true;
             submitButton.disabled = true;
-
-            if (!input.checkValidity()) {
-              notification.textContent = "请填写署名";
-              return;
-            }
 
             if (!textarea.checkValidity()) {
               notification.textContent = "请填写评论内容";
@@ -386,7 +449,6 @@ const _renderComments = (comments: Comment[]) => {
                 parseInt(selectedOffset!.dataset.originalDocumentStart!),
                 parseInt(selectedOffset!.dataset.originalDocumentEnd!),
               ],
-              username: input.value,
               content: textarea.value,
             })
               .then(() => {
@@ -422,17 +484,11 @@ const _renderComments = (comments: Comment[]) => {
                   const newNotification = commentsPanel.querySelector(
                     ".review_selected .comment_reply_notification",
                   );
-                  const newInput = commentsPanel.querySelector(
-                    ".review_selected .comment_reply_panel input",
-                  ) as HTMLInputElement;
                   const newTextArea = commentsPanel.querySelector(
                     ".review_selected .comment_reply_panel textarea",
                   ) as HTMLTextAreaElement;
                   if (newNotification) {
                     newNotification.textContent = notification.textContent;
-                  }
-                  if (newInput) {
-                    newInput.value = input.value;
                   }
                   if (newTextArea) {
                     newTextArea.value = textarea.value;
@@ -444,6 +500,7 @@ const _renderComments = (comments: Comment[]) => {
             break;
         }
       });
+    }
 
     container.addEventListener("mouseenter", () => {
       paragraph?.classList.add("review_focused");
@@ -533,6 +590,8 @@ export function setupReview(
 ) {
   apiEndpoint = endpoint.endsWith("/") ? endpoint : endpoint + "/";
 
+  _handleOAuthToken();
+
   const offsets = Array.from(
     el.querySelectorAll<HTMLElement>(
       "[data-original-document-start][data-original-document-end]",
@@ -568,6 +627,7 @@ export function setupReview(
   commentsCache = undefined;
 
   _updateAvailableComments();
+  _fetchGitHubMeta();
 
   if (globalInitialized) {
     _closeCommentsPanel();
