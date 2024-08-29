@@ -7,23 +7,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  changes:
-    runs-on: ubuntu-latest
-    outputs:
-      src: ${{ steps.filter.outputs.src }}
-    steps:
-      - uses: actions/checkout@v4
-        name: Checkout Repo
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            src:
-              - 'python-markdown-extension/**'
   publish:
     name: Publish
-    needs: changes
-    if: ${{ needs.changes.outputs.src == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
