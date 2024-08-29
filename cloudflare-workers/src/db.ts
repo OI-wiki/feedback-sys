@@ -4,26 +4,38 @@ export async function postComment(env: Env, req: PostComment) {
 	const db = env.DB;
 
 	// 插入页面（如果不存在）并返回 ID
-    const pageResult = (await db.prepare(`
+	const pageResult = (await db
+		.prepare(
+			`
         INSERT INTO pages (path) VALUES (?)
         ON CONFLICT (path) DO UPDATE SET id = id
         RETURNING id
-    `).bind(req.path).first())!;
+    `,
+		)
+		.bind(req.path)
+		.first())!;
 
-    const pageId = pageResult.id;
+	const pageId = pageResult.id;
 
-    // 插入偏移量（如果不存在）并返回 ID
-    const offsetResult = (await db.prepare(`
+	// 插入偏移量（如果不存在）并返回 ID
+	const offsetResult = (await db
+		.prepare(
+			`
         INSERT INTO offsets (page_id, start, end) 
         VALUES (?, ?, ?)
         ON CONFLICT (page_id, start, end) DO UPDATE SET id = id
         RETURNING id
-    `).bind(pageId, req.offset.start, req.offset.end).first())!;
+    `,
+		)
+		.bind(pageId, req.offset.start, req.offset.end)
+		.first())!;
 
-    const offsetId = offsetResult.id;
+	const offsetId = offsetResult.id;
 
-    // 插入评论
-    await db.prepare(`
+	// 插入评论
+	await db
+		.prepare(
+			`
         INSERT INTO comments (offset_id, commenter_id, comment, created_time)
         VALUES (
             ?,
@@ -31,13 +43,10 @@ export async function postComment(env: Env, req: PostComment) {
             ?,
             ?
         )
-    `).bind(
-        offsetId,
-        req.commenter.oauth_provider,
-        req.commenter.oauth_user_id,
-        req.comment,
-        new Date().toISOString()
-    ).run();
+    `,
+		)
+		.bind(offsetId, req.commenter.oauth_provider, req.commenter.oauth_user_id, req.comment, new Date().toISOString())
+		.run();
 }
 
 export async function registerUser(env: Env, name: string, oauth_provider: string, oauth_user_id: string) {
