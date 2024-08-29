@@ -50,12 +50,18 @@ jobs:
             ADMINISTRATOR_SECRET
             TELEGRAM_BOT_TOKEN
             TELEGRAM_CHAT_ID
+            GITHUB_APP_CLIENT_ID
+            GITHUB_APP_CLIENT_SECRET
+            OAUTH_JWT_SECRET
           preCommands: |
             wrangler d1 execute comments --yes --file=schema.sql
         env:
           ADMINISTRATOR_SECRET: ${{ secrets.ADMINISTRATOR_SECRET }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GITHUB_APP_CLIENT_ID: ${{ secrets.GITHUB_APP_CLIENT_ID }}
+          GITHUB_APP_CLIENT_SECRET: ${{ secrets.GITHUB_APP_CLIENT_SECRET }}
+          OAUTH_JWT_SECRET: ${{ secrets.OAUTH_JWT_SECRET }}
   upload-artifacts:
     name: Upload Artifacts
     runs-on: ubuntu-latest
