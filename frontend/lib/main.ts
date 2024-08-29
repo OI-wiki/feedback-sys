@@ -73,6 +73,7 @@ const _handleOAuthToken = () => {
 };
 
 const _getJWT = () => {
+  // https://developer.mozilla.org/zh-CN/docs/Web/API/Document/cookie#%E7%A4%BA%E4%BE%8B_2_%E5%BE%97%E5%88%B0%E5%90%8D%E4%B8%BA_test2_%E7%9A%84_cookie
   return document.cookie.replace(
     /(?:(?:^|.*;\s*)oauth_token\s*\=\s*([^;]*).*$)|^.*$/,
     "$1",
