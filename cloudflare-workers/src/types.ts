@@ -84,6 +84,6 @@ export type OAuthState = {
 export type GitHubGetUserInfoResp = {
 	login: string;
 	id: number;
-	name: string;
+	name?: string;
 	email: string;
 };
