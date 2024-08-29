@@ -115,7 +115,7 @@ router.post('/comment/:path', async (req, env, ctx) => {
 
 	await postComment(env, data);
 
-	ctx.waitUntil(sendCommentUpdateToTelegram(env, data, token.name ?? token.login));
+	ctx.waitUntil(sendCommentUpdateToTelegram(env, data, token.name));
 
 	const cache = caches.default;
 	ctx.waitUntil(purgeCommentCache(env, cache, new URL(req.url).origin, params.path));
@@ -242,7 +242,7 @@ router.get('/oauth/callback', async (req, env, ctx) => {
 	const token = await getAccessToken(env, code);
 	const userInfo = await getUserInfo(token);
 
-	const jwt = await signJWT({ id: userInfo.id, name: userInfo.name, login: userInfo.login }, env.OAUTH_JWT_SECRET);
+	const jwt = await signJWT({ id: userInfo.id, name: userInfo.name ?? userInfo.login }, env.OAUTH_JWT_SECRET);
 
 	await registerUser(env, userInfo.name ?? userInfo.login, 'github', userInfo.id + '');
 
