@@ -133,7 +133,7 @@ export async function signJWT(
 		{
 			...payload,
 			nbf: Math.floor(Date.now() / 1000),
-			exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7 days
+			exp: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60, // 30 days
 		},
 		secret,
 		{ algorithm: 'HS256' },
