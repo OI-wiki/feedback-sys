@@ -35,7 +35,21 @@ import { signJWT, verifyAndDecodeJWT } from './utils';
 import { getAccessToken, getUserInfo } from './oauth';
 
 const { preflight, corsify } = cors({
-	origin: 'https://oi-wiki.org',
+	origin: [
+		'https://oi-wiki.org',
+		'http://oi-wiki.com',
+		'https://oi-wiki.net',
+		'https://oi-wiki.wiki',
+		'https://oi-wiki.win',
+		'https://oi-wiki.xyz',
+		'https://oiwiki.moe',
+		'https://oiwiki.net',
+		'https://oiwiki.org',
+		'https://oiwiki.wiki',
+		'https://oiwiki.win',
+		'https://oiwiki.com',
+		'https://oi.wiki',
+	],
 	allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
 	allowHeaders: ['Authorization', 'Content-Type'],
 	maxAge: 86400,
