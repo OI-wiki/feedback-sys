@@ -78,14 +78,17 @@ export function calcOffsetModification(offsets: Offset[], diff: ModifiedCommentB
 
 	for (let i = 0; i < offsets.length; i++) {
 		const { start, end } = offsets[i];
-		const { startDelta, endDelta, invalid: invaild } = offsetsDelta[i];
+		let { startDelta, endDelta, invalid } = offsetsDelta[i];
+		if (end + endDelta - (start + startDelta) === 0) {
+			invalid = true;
+		}
 		replacement.push({
 			from: {
 				start: start,
 				end: end,
 			},
 			to:
-				invaild === true
+				invalid === true
 					? undefined
 					: {
 							start: start + startDelta,
