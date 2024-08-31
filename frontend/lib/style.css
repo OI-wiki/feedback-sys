@@ -78,7 +78,7 @@
 
   transform: translateX(-100%);
   padding: 0 4px;
-  border-radius: 4px 0 0 4px;
+  border-radius: 4px;
 
   @media (--mobile) {
     left: 50%;
@@ -91,11 +91,6 @@
 
   .iconify-icon {
     display: inline;
-  }
-
-  & span {
-    padding-right: 4px;
-    border-radius: 0 4px 4px 0;
   }
 
   &:hover {
