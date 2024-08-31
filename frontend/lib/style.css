@@ -76,44 +76,30 @@
   top: 0;
   left: 0;
 
-  margin-left: -90px;
+  transform: translateX(-100%);
   padding: 0 4px;
   border-radius: 4px 0 0 4px;
 
   @media (--mobile) {
     left: 50%;
-    transform: translate(150%, -80%);
+    margin-left: 0;
+    transform: translate(-50%, -80%);
     background-color: var(--review-variant-bg-color);
-
-    & span {
-      background-color: var(--review-variant-bg-color);
-    }
   }
 
   color: var(--review-text-color);
 
-  & button {
-    vertical-align: text-top;
+  .iconify-icon {
+    display: inline;
   }
 
   & span {
-    position: absolute;
-    top: 0;
-    left: 100%;
-
-    width: max-content;
-    height: 100%;
-
     padding-right: 4px;
     border-radius: 0 4px 4px 0;
   }
 
   &:hover {
     background-color: var(--review-variant-bg-color);
-
-    & span {
-      background-color: var(--review-variant-bg-color);
-    }
   }
 }
 
