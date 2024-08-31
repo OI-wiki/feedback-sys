@@ -26,6 +26,8 @@
     "prepublishOnly": "yarn build"
   },
   "devDependencies": {
+    "@iconify-json/material-symbols": "^1.1.89",
+    "@iconify/utils": "^2.1.32",
     "@types/node": "^22.1.0",
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.40",
