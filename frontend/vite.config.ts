@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import autoprefixer from "autoprefixer";
 import postcssPresetEnv from "postcss-preset-env";
+import iconify from "./iconify";
 
 export default defineConfig({
   build: {
@@ -32,4 +33,5 @@ export default defineConfig({
   define: {
     __LIB_VERSION__: JSON.stringify(process.env.npm_package_version),
   },
+  plugins:[iconify()]
 });
