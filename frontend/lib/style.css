@@ -66,12 +66,29 @@
   cursor: pointer;
 }
 
-#review-context-menu {
-  display: inline-block;
+*:has(#review-context-menu) {
   position: relative;
+}
 
+#review-context-menu {
+  position: absolute;
+
+  top: 0;
+  left: 0;
+
+  margin-left: -90px;
   padding: 0 4px;
   border-radius: 4px 0 0 4px;
+
+  @media (--mobile) {
+    left: 50%;
+    transform: translate(150%, -80%);
+    background-color: var(--review-variant-bg-color);
+
+    & span {
+      background-color: var(--review-variant-bg-color);
+    }
+  }
 
   color: var(--review-text-color);
 
