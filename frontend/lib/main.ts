@@ -1,7 +1,7 @@
 import "./style.css";
-import iconAddComment from 'iconify/add-comment-outline-rounded';
-import iconComment from 'iconify/comment-outline-rounded';
-import iconClose from 'iconify/close';
+import iconAddComment from "iconify/add-comment-outline-rounded";
+import iconComment from "iconify/comment-outline-rounded";
+import iconClose from "iconify/close";
 
 const groupBy = function <K extends string, T>(arr: T[], func: (el: T) => K) {
   return arr.reduce(

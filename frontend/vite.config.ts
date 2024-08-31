@@ -33,5 +33,5 @@ export default defineConfig({
   define: {
     __LIB_VERSION__: JSON.stringify(process.env.npm_package_version),
   },
-  plugins:[iconify()]
+  plugins: [iconify()],
 });
