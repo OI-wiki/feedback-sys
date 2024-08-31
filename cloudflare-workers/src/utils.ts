@@ -116,6 +116,9 @@ export async function sendTelegramMessage(botToken: string, chatId: string, mess
 			chat_id: chatId,
 			text: message,
 			parse_mode: 'MarkdownV2',
+			link_preview_options: {
+				is_disabled: true,
+			},
 		}),
 	});
 
