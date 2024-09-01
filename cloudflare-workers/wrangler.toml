@@ -1,5 +1,5 @@
 #:schema node_modules/wrangler/config-schema.json
-name = "cloudflare-workers"
+name = "feedback-sys-backend"
 main = "src/index.ts"
 compatibility_date = "2023-05-18"
 compatibility_flags = ["nodejs_compat"]
