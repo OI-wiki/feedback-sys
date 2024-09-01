@@ -4,6 +4,9 @@ main = "src/index.ts"
 compatibility_date = "2023-05-18"
 compatibility_flags = ["nodejs_compat"]
 
+[placement]
+mode = "smart"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "comments"
