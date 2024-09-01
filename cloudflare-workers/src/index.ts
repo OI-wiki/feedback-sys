@@ -66,7 +66,7 @@ const router = AutoRouter({
 router.post('/comment/:path', async (req, env, ctx) => {
 	const params = req.params as GetCommentBody;
 
-	if (params == undefined || params.path == undefined) {
+	if (params === undefined || params.path === undefined) {
 		return error(400, 'Invalid request body');
 	}
 
@@ -176,7 +176,7 @@ router.delete('/comment/:path/id/:id', async (req, env, ctx) => {
 
 	const user = await getUserOfComment(env, parseInt(params.id));
 
-	if (user == null || user.oauth_provider != token.provider || user.oauth_user_id != token.id) {
+	if (user === null || user.oauth_provider !== token.provider || user.oauth_user_id !== token.id) {
 		return error(401, 'Unauthorized');
 	}
 
@@ -234,7 +234,7 @@ router.patch('/comment/:path/id/:id', async (req, env, ctx) => {
 
 	const user = await getUserOfComment(env, parseInt(params.id));
 
-	if (user == null || user.oauth_provider != token.provider || user.oauth_user_id != token.id) {
+	if (user === null || user.oauth_provider !== token.provider || user.oauth_user_id !== token.id) {
 		return error(401, 'Unauthorized');
 	}
 
@@ -301,11 +301,11 @@ router.patch('/comment/:path', async (req, env, ctx) => {
 		return error(400, 'Invalid request body');
 	}
 
-	if (body.type == 'renamed' && (body.to == undefined || !body.to.startsWith('/'))) {
+	if (body.type === 'renamed' && (body.to == undefined || !body.to.startsWith('/'))) {
 		return error(400, 'Invalid request body');
 	}
 
-	if (body.type == 'modified' && (body.diff == undefined || body.diff instanceof Array == false || body.diff.length == 0)) {
+	if (body.type === 'modified' && (body.diff == undefined || body.diff instanceof Array === false || body.diff.length === 0)) {
 		return error(400, 'Invalid request body');
 	}
 
@@ -328,9 +328,9 @@ router.patch('/comment/:path', async (req, env, ctx) => {
 	const cache = caches.default;
 	ctx.waitUntil(purgeCommentCache(env, cache, new URL(req.url).origin, params.path));
 
-	if (body.type == 'renamed') {
+	if (body.type === 'renamed') {
 		await renameComments(env, params.path, body.to);
-	} else if (body.type == 'modified') {
+	} else if (body.type === 'modified') {
 		await modifyComments(env, params.path, body.diff);
 	}
 
