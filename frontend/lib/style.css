@@ -71,19 +71,29 @@
 }
 
 #review-context-menu {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
   position: absolute;
 
   top: 0;
-  left: 0;
+  right: 0;
 
-  transform: translateX(-100%);
-  padding: 0 4px;
-  border-radius: 4px;
+  transform: translateX(100%);
+  padding: 2px 4px;
+
+  border: 1px solid var(--review-border-color);
+  border-radius: 5px;
+
+  height: 30px;
+  width: 30px;
+  font-size: 16px;
 
   @media (--mobile) {
     left: 50%;
-    margin-left: 0;
-    transform: translate(-50%, -80%);
+    top: 50%;
+    transform: translateX(-50%);
     background-color: var(--review-variant-bg-color);
   }
 

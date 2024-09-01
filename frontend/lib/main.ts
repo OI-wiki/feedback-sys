@@ -169,7 +169,6 @@ const _openContextMenu = ({ el }: { el: HTMLElement }) => {
     content: `
     <button data-action="comment">
       ${iconAddComment}
-      <span>评论该段</span>
     </button>
     `,
     parent: el,
@@ -178,7 +177,7 @@ const _openContextMenu = ({ el }: { el: HTMLElement }) => {
       [
         "comment",
         (innerEl) => {
-          innerEl.remove();
+          innerEl.parentElement?.remove();
           _selectOffsetParagraph({
             el,
             focusReply: true,
