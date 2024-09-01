@@ -104,3 +104,9 @@ export type Commenter = {
 	oauth_user_id: string;
 	name: string;
 };
+
+export type JWTPayload = {
+	provider: string;
+	id: string;
+	name: string;
+};
