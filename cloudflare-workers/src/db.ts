@@ -1,4 +1,4 @@
-import { GetComment, GetCommentRespBody, Offset, PostComment } from './types';
+import { Commenter, GetComment, GetCommentRespBody, Offset, PostComment } from './types';
 
 export async function postComment(env: Env, req: PostComment) {
 	const db = env.DB;
@@ -49,6 +49,29 @@ export async function postComment(env: Env, req: PostComment) {
 		.run();
 }
 
+export async function deleteComment(env: Env, id: number) {
+	const db = env.DB;
+
+	await db.prepare('DELETE FROM comments WHERE id = ?').bind(id).run();
+}
+
+export async function modifyComment(env: Env, id: number, comment: string) {
+	const db = env.DB;
+
+	await db.prepare('UPDATE comments SET comment = ? WHERE id = ?').bind(comment, id).run();
+}
+
+export async function getUserOfComment(env: Env, comment_id: number): Promise<Commenter | null> {
+	const db = env.DB;
+
+	return await db
+		.prepare(
+			'SELECT commenters.oauth_provider, commenters.oauth_user_id, commenters.name FROM comments JOIN commenters ON comments.commenter_id = commenters.id WHERE comments.id = ?',
+		)
+		.bind(comment_id)
+		.first();
+}
+
 export async function registerUser(env: Env, name: string, oauth_provider: string, oauth_user_id: string) {
 	const db = env.DB;
 
@@ -81,6 +104,8 @@ export async function getComment(env: Env, req: GetComment): Promise<GetCommentR
 			},
 			commenter: {
 				name: comment.name as string,
+				oauth_provider: comment.oauth_provider as string,
+				oauth_user_id: comment.oauth_user_id as string,
 			},
 			comment: comment.comment as string,
 			created_time: comment.created_time as string,

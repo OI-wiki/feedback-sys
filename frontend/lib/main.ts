@@ -22,6 +22,8 @@ type Comment = {
     end: number;
   };
   commenter: {
+    oauth_provider: "github";
+    oauth_user_id: string;
     name: string | null;
   };
   comment: string;
@@ -33,8 +35,9 @@ type GitHubMeta = {
   client_id: string;
 };
 
-type GitHubUserInfo = {
-  id: number;
+type JWTPayload = {
+  provider: "github";
+  id: string;
   name: string;
 };
 
@@ -83,12 +86,12 @@ const _getJWT = () => {
   );
 };
 
-const _getUserInfo = () => {
+const _decodeJWT = () => {
   const jwt = _getJWT();
   if (!jwt) return;
   const payload = atob(jwt.split(".")[1]);
 
-  return JSON.parse(payload) as GitHubUserInfo;
+  return JSON.parse(payload) as JWTPayload;
 };
 
 const _registerDialog = ({
@@ -222,6 +225,8 @@ const _openCommentsPanel = async () => {
       },
       commenter: {
         name: "新评论",
+        oauth_provider: "github",
+        oauth_user_id: "-1",
       },
       comment: "",
       created_time: new Date().toISOString(),
@@ -289,7 +294,9 @@ const _submitComment = async ({
     commentsCache.push({
       ...comment,
       commenter: {
-        name: _getUserInfo()?.name ?? "未知用户",
+        name: _decodeJWT()?.name ?? "未知用户",
+        oauth_provider: _decodeJWT()?.provider as "github",
+        oauth_user_id: _decodeJWT()?.id ?? "-1",
       },
       id: commentsCache.length,
       created_time: new Date().toISOString(),
@@ -312,11 +319,96 @@ const _submitComment = async ({
     );
   }
 
+  await _fetchComments(true);
   _updateAvailableComments();
 };
 
-const _fetchComments = async () => {
+const _modifyComment = async ({
+  id,
+  comment,
+}: {
+  id: number;
+  comment: string;
+}) => {
+  const res = fetch(
+    `${apiEndpoint}comment/${encodeURIComponent(new URL(window.location.href).pathname)}/id/${id}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${_getJWT()}`,
+      },
+      body: JSON.stringify({
+        comment,
+      }),
+    },
+  );
+
   if (commentsCache) {
+    commentsCache = commentsCache.map((it) =>
+      it.id === id ? { ...it, pending: true } : it,
+    );
+  }
+
+  const resp = await res;
+
+  if (!resp.ok) {
+    if (commentsCache) {
+      commentsCache = commentsCache.map((it) =>
+        it.id === id ? { ...it, pending: false } : it,
+      );
+    }
+    throw resp;
+  }
+
+  if (commentsCache) {
+    commentsCache = commentsCache.map((it) =>
+      it.id === id ? { ...it, comment, pending: false } : it,
+    );
+  }
+
+  await _fetchComments(true);
+  _updateAvailableComments();
+};
+
+const _deleteComment = async ({ id }: { id: number }) => {
+  const res = fetch(
+    `${apiEndpoint}comment/${encodeURIComponent(new URL(window.location.href).pathname)}/id/${id}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${_getJWT()}`,
+      },
+    },
+  );
+
+  if (commentsCache) {
+    commentsCache = commentsCache.map((it) =>
+      it.id === id ? { ...it, pending: true } : it,
+    );
+  }
+
+  const resp = await res;
+
+  if (!resp.ok) {
+    if (commentsCache) {
+      commentsCache = commentsCache.map((it) =>
+        it.id === id ? { ...it, pending: false } : it,
+      );
+    }
+    throw resp;
+  }
+
+  if (commentsCache) {
+    commentsCache = commentsCache.filter((it) => it.id !== id);
+  }
+
+  await _fetchComments(true);
+  _updateAvailableComments();
+};
+
+const _fetchComments = async (force: boolean = false) => {
+  if (!force && commentsCache) {
     return commentsCache;
   }
 
@@ -365,23 +457,27 @@ const _renderComments = (comments: Comment[]) => {
       </div>
       <div class="comments_group_main"></div>
       <div class="comments_group_footer">
-        <div class="comment_reply_panel">
+        <div class="comment_actions_panel">
           <div class="comment_username"></div>
           <textarea required placeholder="写下你的评论..."  autocapitalize="sentences" autocomplete="on" spellcheck="true" autofocus="true" maxlength="65535"></textarea>
           <div class="comment_actions comment_actions_login">
-            <button class="comment_reply_item comment_reply_item_primary" data-action="login">登录到 GitHub</button>
+            <button class="comment_actions_item comment_actions_item_primary" data-action="login">登录到 GitHub</button>
+          </div>
+          <div class="comment_actions comment_actions_modify">
+            <button class="comment_actions_item" data-action="modify_cancel">取消</button>
+            <button class="comment_actions_item comment_actions_item_primary" data-action="modify_submit">修改</button>
           </div>
           <div class="comment_actions comment_actions_reply">
-            <span class="comment_reply_notification"></span>
-            <button class="comment_reply_item" data-action="cancel">取消</button>
-            <button class="comment_reply_item comment_reply_item_primary" data-action="submit">提交</button>
+            <span class="comment_actions_notification"></span>
+            <button class="comment_actions_item" data-action="cancel">取消</button>
+            <button class="comment_actions_item comment_actions_item_primary" data-action="submit">提交</button>
           </div>
         </div>
       </div>
     `.trim();
 
     container
-      .querySelector(".comment_reply_panel textarea")!
+      .querySelector(".comment_actions_panel textarea")!
       .addEventListener("input", (e) => {
         const element = e.currentTarget as HTMLTextAreaElement;
         element.style.height = "5px";
@@ -396,7 +492,7 @@ const _renderComments = (comments: Comment[]) => {
       ".comment_actions_login",
     ) as HTMLDivElement;
 
-    const userInfo = _getUserInfo();
+    const userInfo = _decodeJWT();
     if (!userInfo) {
       username.textContent = "登录到 GitHub 以发表评论";
     } else {
@@ -404,105 +500,11 @@ const _renderComments = (comments: Comment[]) => {
       commentActionsLogin.style.display = "none";
     }
 
-    for (const actions of container.querySelectorAll(".comment_actions")) {
-      actions.addEventListener("click", (e) => {
-        if (!(e.target instanceof HTMLButtonElement)) return;
-        const target = e.target as HTMLButtonElement;
+    const commentActionsModify = container.querySelector(
+      ".comment_actions_modify",
+    ) as HTMLDivElement;
 
-        const textarea = container.querySelector(
-          ".comment_reply_panel textarea",
-        ) as HTMLTextAreaElement;
-
-        const notification = container.querySelector(
-          ".comment_reply_notification",
-        ) as HTMLSpanElement;
-
-        const submitButton = container.querySelector(
-          ".comment_reply_item[data-action='submit']",
-        ) as HTMLButtonElement;
-
-        switch (target?.dataset.action) {
-          case "login":
-            if (!githubMeta) {
-              console.log("githubMeta not ready");
-              return;
-            }
-            window.location.href = `https://github.com/login/oauth/authorize?client_id=${githubMeta.client_id}&state=${encodeURIComponent(JSON.stringify({ redirect: window.location.href }))}`;
-            break;
-          case "cancel":
-            textarea.disabled = false;
-            textarea.value = "";
-            notification.textContent = "";
-            submitButton.disabled = false;
-            break;
-          case "submit":
-            textarea.disabled = true;
-            submitButton.disabled = true;
-
-            if (!textarea.checkValidity()) {
-              notification.textContent = "请填写评论内容";
-              return;
-            }
-
-            notification.textContent = "";
-
-            _submitComment({
-              offsets: [
-                parseInt(selectedOffset!.dataset.originalDocumentStart!),
-                parseInt(selectedOffset!.dataset.originalDocumentEnd!),
-              ],
-              content: textarea.value,
-            })
-              .then(() => {
-                textarea.value = "";
-                notification.textContent = "";
-              })
-
-              .catch(async (e) => {
-                console.error(e);
-
-                if (e instanceof Error) {
-                  notification.textContent = e.message;
-                } else if (e instanceof Response) {
-                  if (
-                    e.headers
-                      .get("content-type")
-                      ?.includes("application/json") === true
-                  ) {
-                    const json = (await e.json()) as {
-                      status: number;
-                      error: string;
-                    };
-                    notification.textContent = json.error;
-                  } else {
-                    notification.textContent = `未知接口错误：${e.status}(${e.statusText})`;
-                  }
-                } else {
-                  notification.textContent = "提交失败，请稍后再试";
-                }
-              })
-              .finally(() => {
-                _openCommentsPanel().then(() => {
-                  const newNotification = commentsPanel.querySelector(
-                    ".review_selected .comment_reply_notification",
-                  );
-                  const newTextArea = commentsPanel.querySelector(
-                    ".review_selected .comment_reply_panel textarea",
-                  ) as HTMLTextAreaElement;
-                  if (newNotification) {
-                    newNotification.textContent = notification.textContent;
-                  }
-                  if (newTextArea) {
-                    newTextArea.value = textarea.value;
-                  }
-                });
-              });
-
-            _openCommentsPanel();
-            break;
-        }
-      });
-    }
+    commentActionsModify.style.display = "none";
 
     container.addEventListener("mouseenter", () => {
       paragraph?.classList.add("review_focused");
@@ -538,17 +540,234 @@ const _renderComments = (comments: Comment[]) => {
       if (comment.pending) {
         commentEl.classList.add("comment_pending");
       }
+      commentEl.dataset.id = comment.id.toString();
       commentEl.innerHTML = `
         <div class="comment_header">
           <span class="comment_commenter"></span>
           <span class="comment_time">${dateTimeFormatter.format(new Date(comment.created_time))}</span>
+          <div class="comment_actions">
+            <button data-action="modify">修改</button>
+            <button data-action="delete">删除</button>
+          </div>
         </div>
         <div class="comment_main"></div>
       `.trim();
       commentEl.querySelector(".comment_commenter")!.textContent =
         comment.commenter.name;
       commentEl.querySelector(".comment_main")!.textContent = comment.comment;
+
+      const commentActionsHeader = commentEl.querySelector(
+        ".comment_header .comment_actions",
+      ) as HTMLDivElement;
+
+      if (
+        !userInfo ||
+        userInfo.provider != comment.commenter.oauth_provider ||
+        userInfo.id != comment.commenter.oauth_user_id
+      ) {
+        commentActionsHeader.style.display = "none";
+      }
+
       main.appendChild(commentEl);
+    }
+
+    for (const actions of container.querySelectorAll(".comment_actions")) {
+      actions.addEventListener("click", (e) => {
+        if (!(e.target instanceof HTMLButtonElement)) return;
+        const target = e.target as HTMLButtonElement;
+
+        const textarea = container.querySelector(
+          ".comment_actions_panel textarea",
+        ) as HTMLTextAreaElement;
+
+        const notification = container.querySelector(
+          ".comment_actions_notification",
+        ) as HTMLSpanElement;
+
+        switch (target?.dataset.action) {
+          case "login": {
+            if (!githubMeta) {
+              console.log("githubMeta not ready");
+              return;
+            }
+            window.location.href = `https://github.com/login/oauth/authorize?client_id=${githubMeta.client_id}&state=${encodeURIComponent(JSON.stringify({ redirect: window.location.href }))}`;
+            break;
+          }
+          case "cancel": {
+            textarea.disabled = false;
+            textarea.value = "";
+            notification.textContent = "";
+            break;
+          }
+          case "submit": {
+            textarea.disabled = true;
+
+            if (!textarea.checkValidity()) {
+              notification.textContent = "请填写评论内容";
+              textarea.disabled = false;
+              return;
+            }
+
+            notification.textContent = "";
+
+            _submitComment({
+              offsets: [
+                parseInt(selectedOffset!.dataset.originalDocumentStart!),
+                parseInt(selectedOffset!.dataset.originalDocumentEnd!),
+              ],
+              content: textarea.value,
+            })
+              .then(() => {
+                textarea.value = "";
+                notification.textContent = "";
+              })
+              .catch(async (e) => {
+                console.error(e);
+
+                if (e instanceof Error) {
+                  notification.textContent = e.message;
+                } else if (e instanceof Response) {
+                  if (
+                    e.headers
+                      .get("content-type")
+                      ?.includes("application/json") === true
+                  ) {
+                    const json = (await e.json()) as {
+                      status: number;
+                      error: string;
+                    };
+                    notification.textContent = json.error;
+                  } else {
+                    notification.textContent = `未知接口错误：${e.status}(${e.statusText})`;
+                  }
+                } else {
+                  notification.textContent = "提交失败，请稍后再试";
+                }
+              })
+              .finally(() => {
+                _openCommentsPanel().then(() => {
+                  const newNotification = commentsPanel.querySelector(
+                    ".review_selected .comment_actions_notification",
+                  );
+                  const newTextArea = commentsPanel.querySelector(
+                    ".review_selected .comment_actions_panel textarea",
+                  ) as HTMLTextAreaElement;
+                  if (newNotification) {
+                    newNotification.textContent = notification.textContent;
+                  }
+                  if (newTextArea) {
+                    newTextArea.value = textarea.value;
+                  }
+                });
+              });
+
+            _openCommentsPanel().then(() => {
+              const newSubmitButton = commentsPanel.querySelector(
+                ".review_selected button[data-action='submit']",
+              ) as HTMLButtonElement;
+              if (newSubmitButton) {
+                newSubmitButton.disabled = true;
+              }
+            });
+            break;
+          }
+          case "modify": {
+            container
+              .querySelector(
+                `.comment[data-id="${container.dataset.modifingId}"]`,
+              )
+              ?.classList.remove("comment_pending");
+
+            const commentEl =
+              target.parentElement?.parentElement?.parentElement;
+            const id = commentEl?.dataset?.id;
+            if (id == undefined) return;
+
+            commentEl?.classList.add("comment_pending");
+            commentActionsModify.style.display = "";
+            container.dataset.modifingId = id;
+
+            textarea.value =
+              commentsCache?.find((it) => it.id === parseInt(id))?.comment ??
+              "";
+            break;
+          }
+          case "modify_cancel": {
+            container
+              .querySelector(
+                `.comment[data-id="${container.dataset.modifingId}"]`,
+              )
+              ?.classList.remove("comment_pending");
+            commentActionsModify.style.display = "none";
+            delete container.dataset.modifingId;
+            textarea.disabled = false;
+            textarea.value = "";
+            notification.textContent = "";
+            break;
+          }
+          case "modify_submit": {
+            const id = container.dataset.modifingId;
+            if (id == undefined) return;
+
+            _modifyComment({ id: parseInt(id), comment: textarea.value })
+              .then(() => {
+                textarea.value = "";
+                notification.textContent = "";
+              })
+              .finally(() => {
+                _openCommentsPanel().then(() => {
+                  const newTextArea = commentsPanel.querySelector(
+                    ".review_selected .comment_actions_panel textarea",
+                  ) as HTMLTextAreaElement;
+                  if (newTextArea) {
+                    newTextArea.value = textarea.value;
+                  }
+                });
+              });
+
+            _openCommentsPanel();
+            break;
+          }
+          case "delete": {
+            const id =
+              target.parentElement?.parentElement?.parentElement?.dataset?.id;
+            if (id == undefined) return;
+
+            _deleteComment({ id: parseInt(id) }).finally(() => {
+              _openCommentsPanel().then(() => {
+                const newNotification = commentsPanel.querySelector(
+                  ".review_selected .comment_actions_notification",
+                );
+                const newTextArea = commentsPanel.querySelector(
+                  ".review_selected .comment_actions_panel textarea",
+                ) as HTMLTextAreaElement;
+                if (newNotification) {
+                  newNotification.textContent = notification.textContent;
+                }
+                if (newTextArea) {
+                  newTextArea.value = textarea.value;
+                }
+              });
+            });
+
+            _openCommentsPanel().then(() => {
+              const newDeleteButton = commentsPanel.querySelector(
+                `.comment[data-id="${id}"] button[data-action="delete"]`,
+              ) as HTMLButtonElement;
+              const newModifyButton = commentsPanel.querySelector(
+                `.comment[data-id="${id}"] button[data-action="modify"]`,
+              ) as HTMLButtonElement;
+              if (newDeleteButton) {
+                newDeleteButton.disabled = true;
+              }
+              if (newModifyButton) {
+                newModifyButton.disabled = true;
+              }
+            });
+            break;
+          }
+        }
+      });
     }
 
     fragment.appendChild(container);

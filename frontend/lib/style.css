@@ -293,7 +293,7 @@
     word-break: break-word;
   }
 
-  & .comment_reply_panel textarea {
+  & .comment_actions_panel textarea {
     width: 100%;
     resize: none;
     overflow: hidden;
@@ -311,7 +311,7 @@
     background-color: var(--review-on-text-color);
   }
 
-  & .comment_reply_panel .comment_username {
+  & .comment_actions_panel .comment_username {
     width: 100%;
 
     padding: 3px;
@@ -328,15 +328,22 @@
   }
 
   &
-    .comment_reply_panel
+    .comment_actions_panel
     textarea:invalid
     ~ .comment_actions.comment_actions_reply {
     display: none;
   }
 
   &
-    .comment_reply_panel
+    .comment_actions_panel
     .comment_actions_login:not([style*="display: none"])
+    ~ .comment_actions.comment_actions_reply {
+    display: none;
+  }
+
+  &
+    .comment_actions_panel
+    .comment_actions_modify:not([style*="display: none"])
     ~ .comment_actions.comment_actions_reply {
     display: none;
   }
@@ -349,11 +356,15 @@
 
     margin-top: 12px;
 
-    & .comment_reply_notification {
+    & button[data-action="delete"] {
       color: var(--review-error-text-color);
     }
 
-    & .comment_reply_item {
+    & .comment_actions_notification {
+      color: var(--review-error-text-color);
+    }
+
+    & .comment_actions_item {
       padding: 3px 7px;
 
       height: 28px;
@@ -367,7 +378,7 @@
 
       color: var(--review-text-color);
 
-      &.comment_reply_item_primary {
+      &.comment_actions_item_primary {
         background-color: var(--review-primary-color);
       }
 

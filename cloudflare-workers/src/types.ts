@@ -28,12 +28,23 @@ export type GetCommentRespBody = {
 		start: number;
 		end: number;
 	};
-	commenter: {
-		name: string | null;
-	};
+	commenter: Commenter;
 	comment: string;
 	created_time: string;
 }[];
+
+type ModifyCommentParam = {
+	path: string;
+	id: string;
+};
+
+export type DeleteCommentIDParam = ModifyCommentParam;
+
+export type PatchCommentIDParam = ModifyCommentParam;
+
+export type PatchCommentIDBody = {
+	comment: string;
+};
 
 export type PutCommitHashBody = {
 	commit_hash: string;
@@ -86,4 +97,10 @@ export type GitHubGetUserInfoResp = {
 	id: number;
 	name?: string;
 	email: string;
+};
+
+export type Commenter = {
+	oauth_provider: string;
+	oauth_user_id: string;
+	name: string;
 };
