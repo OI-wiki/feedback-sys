@@ -58,7 +58,7 @@ export async function deleteComment(env: Env, id: number) {
 export async function modifyComment(env: Env, id: number, comment: string) {
 	const db = env.DB;
 
-	await db.prepare('UPDATE comments SET comment = ? WHERE id = ?').bind(comment, id).run();
+	await db.prepare('UPDATE comments SET comment = ?, last_edited_time = ? WHERE id = ?').bind(comment, new Date().toISOString(), id).run();
 }
 
 export async function getUserOfComment(env: Env, comment_id: number): Promise<Commenter | null> {
@@ -109,6 +109,7 @@ export async function getComment(env: Env, req: GetComment): Promise<GetCommentR
 			},
 			comment: comment.comment as string,
 			created_time: comment.created_time as string,
+			last_edited_time: comment.last_edited_time as string | null,
 		};
 	});
 }

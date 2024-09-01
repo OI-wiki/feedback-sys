@@ -28,6 +28,7 @@ type Comment = {
   };
   comment: string;
   created_time: string;
+  last_edited_time: string | null;
   pending?: boolean;
 };
 
@@ -41,7 +42,7 @@ type JWTPayload = {
   name: string;
 };
 
-const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+const dateTimeFormatter = new Intl.DateTimeFormat("zh-CN", {
   dateStyle: "short",
   timeStyle: "short",
 });
@@ -230,6 +231,7 @@ const _openCommentsPanel = async () => {
       },
       comment: "",
       created_time: new Date().toISOString(),
+      last_edited_time: null,
       pending: true,
     });
   }
@@ -300,6 +302,7 @@ const _submitComment = async ({
       },
       id: commentsCache.length,
       created_time: new Date().toISOString(),
+      last_edited_time: null,
       pending: true,
     });
   }
@@ -544,13 +547,17 @@ const _renderComments = (comments: Comment[]) => {
       commentEl.innerHTML = `
         <div class="comment_header">
           <span class="comment_commenter"></span>
-          <span class="comment_time">${dateTimeFormatter.format(new Date(comment.created_time))}</span>
+          <span class="comment_time comment_created_time">发布于 ${dateTimeFormatter.format(new Date(comment.created_time))}</span>
+          <span class="comment_time comment_edited_time">最后编辑于 ${comment.last_edited_time ? dateTimeFormatter.format(new Date(comment.last_edited_time)) : ""}</span>
           <div class="comment_actions">
             <button data-action="modify">修改</button>
             <button data-action="delete">删除</button>
           </div>
         </div>
         <div class="comment_main"></div>
+        <div class="comment_footer">
+          <span class="comment_edit_tag">(已编辑)</span>
+        </div>
       `.trim();
       commentEl.querySelector(".comment_commenter")!.textContent =
         comment.commenter.name;
@@ -566,6 +573,36 @@ const _renderComments = (comments: Comment[]) => {
         userInfo.id != comment.commenter.oauth_user_id
       ) {
         commentActionsHeader.style.display = "none";
+      }
+
+      const commentHeaderCreatedTime = commentEl.querySelector(
+        ".comment_header .comment_created_time",
+      ) as HTMLSpanElement;
+
+      const commentHeaderEditedTime = commentEl.querySelector(
+        ".comment_header .comment_edited_time",
+      ) as HTMLSpanElement;
+
+      commentHeaderEditedTime.style.display = "none";
+
+      if (comment.last_edited_time) {
+        commentHeaderCreatedTime.addEventListener("click", () => {
+          commentHeaderCreatedTime.style.display = "none";
+          commentHeaderEditedTime.style.display = "";
+        });
+      }
+
+      commentHeaderEditedTime.addEventListener("click", () => {
+        commentHeaderCreatedTime.style.display = "";
+        commentHeaderEditedTime.style.display = "none";
+      });
+
+      const commentFooterEditTag = commentEl.querySelector(
+        ".comment_footer .comment_edit_tag",
+      ) as HTMLSpanElement;
+
+      if (!comment.last_edited_time) {
+        commentFooterEditTag.style.display = "none";
       }
 
       main.appendChild(commentEl);
