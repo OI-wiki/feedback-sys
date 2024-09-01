@@ -13,9 +13,11 @@
 
 import { AutoRouter, cors, error } from 'itty-router';
 import {
+	Commenter,
 	DeleteCommentIDParam,
 	GetCommentBody,
 	GetCommentRespBody,
+	ModifiedCommentBody,
 	OAuthState,
 	PatchCommentBody,
 	PatchCommentIDBody,
@@ -36,6 +38,94 @@ import {
 import { matchCommentCache, purgeAllCommentCache, purgeCommentCache, putCommentCache } from './cache';
 import { signJWT, verifyAndDecodeJWT } from './utils';
 import { getAccessToken, getUserInfo } from './oauth';
+
+function validatePath(path: string | undefined): boolean {
+	if (path === undefined) {
+		return false;
+	}
+
+	if (!path.startsWith('/')) {
+		return false;
+	}
+
+	return true;
+}
+
+function validateAndDecodePath(path: string | undefined): string | null {
+	if (path === undefined) {
+		return null;
+	}
+
+	path = decodeURIComponent(path);
+
+	if (!path.startsWith('/')) {
+		return null;
+	}
+
+	return path;
+}
+
+function validateDiff(diff: ModifiedCommentBody['diff']): boolean {
+	return diff != undefined && diff instanceof Array === true && diff.length !== 0;
+}
+
+function validateOffset(offset: PostCommentBody['offset']): boolean {
+	return offset.start >= 0 && offset.end >= 0 && offset.start < offset.end;
+}
+
+function validateComment(comment: PostCommentBody['comment'] | undefined): boolean {
+	return comment != undefined && comment.length >= 1 && comment.length <= 65535;
+}
+
+async function validateAndDecodeAuthorizationToken(env: Env, req: Request): Promise<JWTPayload | null> {
+	const authorization = req.headers.get('Authorization');
+
+	if (!authorization) {
+		return null;
+	}
+
+	const [scheme, secret] = authorization.split(' ');
+
+	if (scheme !== 'Bearer' || !secret) {
+		return null;
+	}
+
+	let token;
+	try {
+		token = (await verifyAndDecodeJWT(secret, env.OAUTH_JWT_SECRET)) as JWTPayload;
+	} catch (e) {
+		return null;
+	}
+
+	return token;
+}
+
+function validateAdministratorSecret(env: Env, req: Request): boolean {
+	const authorization = req.headers.get('Authorization');
+
+	if (!authorization) {
+		return false;
+	}
+
+	const [scheme, secret] = authorization.split(' ');
+
+	if (scheme !== 'Bearer' || !secret) {
+		return false;
+	}
+
+	return validateSecret(env, secret);
+}
+
+function validateCommitHash(hash: string | undefined): boolean {
+	return hash != undefined && hash.length > 0;
+}
+
+function isSameCommenter(commenter: Commenter | null, token: JWTPayload | null): boolean {
+	if (commenter === null || token === null) {
+		return false;
+	}
+	return commenter.oauth_provider === token.provider && commenter.oauth_user_id === token.id;
+}
 
 const { preflight, corsify } = cors({
 	origin: [
@@ -63,18 +153,25 @@ const router = AutoRouter({
 	finally: [corsify],
 });
 
+type JWTPayload = {
+	provider: string;
+	id: string;
+	name: string;
+};
+
 router.post('/comment/:path', async (req, env, ctx) => {
 	const params = req.params as GetCommentBody;
 
-	if (params === undefined || params.path === undefined) {
+	if (params === undefined) {
 		return error(400, 'Invalid request body');
 	}
 
-	params.path = decodeURIComponent(params.path);
-
-	if (!params.path.startsWith('/')) {
+	const path = validateAndDecodePath(params.path);
+	if (path === null) {
 		return error(400, 'Invalid path');
 	}
+
+	params.path = path;
 
 	const body = await req.json<PostCommentBody>();
 
@@ -89,11 +186,11 @@ router.post('/comment/:path', async (req, env, ctx) => {
 		return error(400, 'Invalid request body');
 	}
 
-	if (body.offset.start < 0 || body.offset.end < 0 || body.offset.start >= body.offset.end) {
+	if (!validateOffset(body.offset)) {
 		return error(400, 'Invalid offset');
 	}
 
-	if (body.comment.length < 1 || body.comment.length > 65535) {
+	if (!validateComment(body.comment)) {
 		return error(400, 'Invalid comment');
 	}
 
@@ -101,22 +198,8 @@ router.post('/comment/:path', async (req, env, ctx) => {
 		return error(409, 'Commit hash mismatch, usually due to outdated cache or running CI/CD, please retry after a few minutes');
 	}
 
-	const authorization = req.headers.get('Authorization');
-
-	if (!authorization) {
-		return error(401, 'Unauthorized');
-	}
-
-	const [scheme, secret] = authorization.split(' ');
-
-	if (scheme !== 'Bearer' || !secret) {
-		return error(400, 'Malformed authorization header');
-	}
-
-	let token;
-	try {
-		token = await verifyAndDecodeJWT(secret, env.OAUTH_JWT_SECRET);
-	} catch (e) {
+	const token = await validateAndDecodeAuthorizationToken(env, req);
+	if (token === null) {
 		return error(401, 'Unauthorized');
 	}
 
@@ -145,38 +228,25 @@ router.post('/comment/:path', async (req, env, ctx) => {
 router.delete('/comment/:path/id/:id', async (req, env, ctx) => {
 	const params = req.params as DeleteCommentIDParam;
 
-	if (params == undefined || params.path == undefined || params.id == undefined) {
+	if (params == undefined || params.id == undefined) {
 		return error(400, 'Invalid request body');
 	}
 
-	params.path = decodeURIComponent(params.path);
-
-	if (!params.path.startsWith('/')) {
+	const path = validateAndDecodePath(params.path);
+	if (path === null) {
 		return error(400, 'Invalid path');
 	}
 
-	const authorization = req.headers.get('Authorization');
+	params.path = path;
 
-	if (!authorization) {
-		return error(401, 'Unauthorized');
-	}
-
-	const [scheme, secret] = authorization.split(' ');
-
-	if (scheme !== 'Bearer' || !secret) {
-		return error(400, 'Malformed authorization header');
-	}
-
-	let token;
-	try {
-		token = await verifyAndDecodeJWT(secret, env.OAUTH_JWT_SECRET);
-	} catch (e) {
+	const token = await validateAndDecodeAuthorizationToken(env, req);
+	if (token === null) {
 		return error(401, 'Unauthorized');
 	}
 
 	const user = await getUserOfComment(env, parseInt(params.id));
 
-	if (user === null || user.oauth_provider !== token.provider || user.oauth_user_id !== token.id) {
+	if (!isSameCommenter(user, token)) {
 		return error(401, 'Unauthorized');
 	}
 
@@ -193,48 +263,35 @@ router.delete('/comment/:path/id/:id', async (req, env, ctx) => {
 router.patch('/comment/:path/id/:id', async (req, env, ctx) => {
 	const params = req.params as PatchCommentIDParam;
 
-	if (params == undefined || params.path == undefined || params.id == undefined) {
+	if (params == undefined || params.id == undefined) {
 		return error(400, 'Invalid request body');
 	}
 
-	params.path = decodeURIComponent(params.path);
-
-	if (!params.path.startsWith('/')) {
+	const path = validateAndDecodePath(params.path);
+	if (path === null) {
 		return error(400, 'Invalid path');
 	}
 
+	params.path = path;
+
 	const body = await req.json<PatchCommentIDBody>();
 
-	if (body == undefined || body.comment == undefined) {
+	if (body == undefined) {
 		return error(400, 'Invalid request body');
 	}
 
-	if (body.comment.length < 1 || body.comment.length > 65535) {
+	if (!validateComment(body.comment)) {
 		return error(400, 'Invalid comment');
 	}
 
-	const authorization = req.headers.get('Authorization');
-
-	if (!authorization) {
-		return error(401, 'Unauthorized');
-	}
-
-	const [scheme, secret] = authorization.split(' ');
-
-	if (scheme !== 'Bearer' || !secret) {
-		return error(400, 'Malformed authorization header');
-	}
-
-	let token;
-	try {
-		token = await verifyAndDecodeJWT(secret, env.OAUTH_JWT_SECRET);
-	} catch (e) {
+	const token = await validateAndDecodeAuthorizationToken(env, req);
+	if (token === null) {
 		return error(401, 'Unauthorized');
 	}
 
 	const user = await getUserOfComment(env, parseInt(params.id));
 
-	if (user === null || user.oauth_provider !== token.provider || user.oauth_user_id !== token.id) {
+	if (!isSameCommenter(user, token)) {
 		return error(401, 'Unauthorized');
 	}
 
@@ -251,11 +308,16 @@ router.patch('/comment/:path/id/:id', async (req, env, ctx) => {
 router.get('/comment/:path', async (req, env, ctx) => {
 	const params = req.params as GetCommentBody;
 
-	if (params == undefined || params.path == undefined) {
+	if (params == undefined) {
 		return error(400, 'Invalid request body');
 	}
 
-	params.path = decodeURIComponent(params.path);
+	const path = validateAndDecodePath(params.path);
+	if (path === null) {
+		return error(400, 'Invalid path');
+	}
+
+	params.path = path;
 
 	const cache = caches.default;
 	let resp = await matchCommentCache(env, cache, new URL(req.url).origin, params.path);
@@ -281,15 +343,16 @@ router.get('/comment/:path', async (req, env, ctx) => {
 router.patch('/comment/:path', async (req, env, ctx) => {
 	const params = req.params as GetCommentBody;
 
-	if (params == undefined || params.path == undefined) {
+	if (params == undefined) {
 		return error(400, 'Invalid request body');
 	}
 
-	params.path = decodeURIComponent(params.path);
-
-	if (!params.path.startsWith('/')) {
+	const path = validateAndDecodePath(params.path);
+	if (path === null) {
 		return error(400, 'Invalid path');
 	}
+
+	params.path = path;
 
 	const body = await req.json<PatchCommentBody>();
 
@@ -301,27 +364,15 @@ router.patch('/comment/:path', async (req, env, ctx) => {
 		return error(400, 'Invalid request body');
 	}
 
-	if (body.type === 'renamed' && (body.to == undefined || !body.to.startsWith('/'))) {
+	if (body.type === 'renamed' && !validatePath(body.to)) {
 		return error(400, 'Invalid request body');
 	}
 
-	if (body.type === 'modified' && (body.diff == undefined || body.diff instanceof Array === false || body.diff.length === 0)) {
+	if (body.type === 'modified' && !validateDiff(body.diff)) {
 		return error(400, 'Invalid request body');
 	}
 
-	const authorization = req.headers.get('Authorization');
-
-	if (!authorization) {
-		return error(401, 'Unauthorized');
-	}
-
-	const [scheme, secret] = authorization.split(' ');
-
-	if (scheme !== 'Bearer' || !secret) {
-		return error(400, 'Malformed authorization header');
-	}
-
-	if (validateSecret(env, secret) !== true) {
+	if (!validateAdministratorSecret(env, req)) {
 		return error(401, 'Unauthorized');
 	}
 
@@ -365,7 +416,10 @@ router.get('/oauth/callback', async (req, env, ctx) => {
 	const token = await getAccessToken(env, code);
 	const userInfo = await getUserInfo(token);
 
-	const jwt = await signJWT({ provider: 'github', id: userInfo.id + '', name: userInfo.name ?? userInfo.login }, env.OAUTH_JWT_SECRET);
+	const jwt = await signJWT(
+		{ provider: 'github', id: userInfo.id + '', name: userInfo.name ?? userInfo.login } satisfies JWTPayload,
+		env.OAUTH_JWT_SECRET,
+	);
 
 	await registerUser(env, userInfo.name ?? userInfo.login, 'github', userInfo.id + '');
 
@@ -381,27 +435,15 @@ router.get('/oauth/callback', async (req, env, ctx) => {
 router.put('/meta/commithash', async (req, env, ctx) => {
 	const body = await req.json<PutCommitHashBody>();
 
-	if (body == undefined || body.commit_hash == undefined) {
+	if (body == undefined) {
 		return error(400, 'Invalid request body');
 	}
 
-	if (body.commit_hash.length < 1) {
+	if (!validateCommitHash(body.commit_hash)) {
 		return error(400, 'Invalid commit hash');
 	}
 
-	const authorization = req.headers.get('Authorization');
-
-	if (!authorization) {
-		return error(401, 'Unauthorized');
-	}
-
-	const [scheme, secret] = authorization.split(' ');
-
-	if (scheme !== 'Bearer' || !secret) {
-		return error(400, 'Malformed authorization header');
-	}
-
-	if (validateSecret(env, secret) !== true) {
+	if (!validateAdministratorSecret(env, req)) {
 		return error(401, 'Unauthorized');
 	}
 
@@ -413,19 +455,7 @@ router.put('/meta/commithash', async (req, env, ctx) => {
 });
 
 router.delete('/cache', async (req, env, ctx) => {
-	const authorization = req.headers.get('Authorization');
-
-	if (!authorization) {
-		return error(401, 'Unauthorized');
-	}
-
-	const [scheme, secret] = authorization.split(' ');
-
-	if (scheme !== 'Bearer' || !secret) {
-		return error(400, 'Malformed authorization header');
-	}
-
-	if (validateSecret(env, secret) !== true) {
+	if (!validateAdministratorSecret(env, req)) {
 		return error(401, 'Unauthorized');
 	}
 
