@@ -95,6 +95,8 @@
     top: 50%;
     transform: translateX(-50%);
     background-color: var(--review-variant-bg-color);
+
+    box-shadow: 0 8px 16px rgba(31, 35, 41, 0.1);
   }
 
   color: var(--review-text-color);
