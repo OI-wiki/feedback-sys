@@ -13,15 +13,18 @@
 
 import { AutoRouter, cors, error } from 'itty-router';
 import {
+	DeleteCommentIDParam,
 	GetCommentBody,
 	GetCommentRespBody,
 	OAuthState,
 	PatchCommentBody,
+	PatchCommentIDBody,
+	PatchCommentIDParam,
 	PostCommentBody,
 	PutCommitHashBody,
 	ResponseBody,
 } from './types';
-import { getComment, postComment, registerUser } from './db';
+import { deleteComment, getComment, getUserOfComment, modifyComment, postComment, registerUser } from './db';
 import {
 	validateSecret,
 	setCommitHash,
@@ -121,7 +124,7 @@ router.post('/comment/:path', async (req, env, ctx) => {
 		path: params.path,
 		offset: body.offset,
 		commenter: {
-			oauth_provider: 'github',
+			oauth_provider: token.provider,
 			oauth_user_id: token.id + '',
 		},
 		comment: body.comment,
@@ -130,6 +133,112 @@ router.post('/comment/:path', async (req, env, ctx) => {
 	await postComment(env, data);
 
 	ctx.waitUntil(sendCommentUpdateToTelegram(env, data, token.name));
+
+	const cache = caches.default;
+	ctx.waitUntil(purgeCommentCache(env, cache, new URL(req.url).origin, params.path));
+
+	return {
+		status: 200,
+	} satisfies ResponseBody;
+});
+
+router.delete('/comment/:path/id/:id', async (req, env, ctx) => {
+	const params = req.params as DeleteCommentIDParam;
+
+	if (params == undefined || params.path == undefined || params.id == undefined) {
+		return error(400, 'Invalid request body');
+	}
+
+	params.path = decodeURIComponent(params.path);
+
+	if (!params.path.startsWith('/')) {
+		return error(400, 'Invalid path');
+	}
+
+	const authorization = req.headers.get('Authorization');
+
+	if (!authorization) {
+		return error(401, 'Unauthorized');
+	}
+
+	const [scheme, secret] = authorization.split(' ');
+
+	if (scheme !== 'Bearer' || !secret) {
+		return error(400, 'Malformed authorization header');
+	}
+
+	let token;
+	try {
+		token = await verifyAndDecodeJWT(secret, env.OAUTH_JWT_SECRET);
+	} catch (e) {
+		return error(401, 'Unauthorized');
+	}
+
+	const user = await getUserOfComment(env, parseInt(params.id));
+
+	if (user == null || user.oauth_provider != token.provider || user.oauth_user_id != token.id) {
+		return error(401, 'Unauthorized');
+	}
+
+	await deleteComment(env, parseInt(params.id));
+
+	const cache = caches.default;
+	ctx.waitUntil(purgeCommentCache(env, cache, new URL(req.url).origin, params.path));
+
+	return {
+		status: 200,
+	} satisfies ResponseBody;
+});
+
+router.patch('/comment/:path/id/:id', async (req, env, ctx) => {
+	const params = req.params as PatchCommentIDParam;
+
+	if (params == undefined || params.path == undefined || params.id == undefined) {
+		return error(400, 'Invalid request body');
+	}
+
+	params.path = decodeURIComponent(params.path);
+
+	if (!params.path.startsWith('/')) {
+		return error(400, 'Invalid path');
+	}
+
+	const body = await req.json<PatchCommentIDBody>();
+
+	if (body == undefined || body.comment == undefined) {
+		return error(400, 'Invalid request body');
+	}
+
+	if (body.comment.length < 1 || body.comment.length > 65535) {
+		return error(400, 'Invalid comment');
+	}
+
+	const authorization = req.headers.get('Authorization');
+
+	if (!authorization) {
+		return error(401, 'Unauthorized');
+	}
+
+	const [scheme, secret] = authorization.split(' ');
+
+	if (scheme !== 'Bearer' || !secret) {
+		return error(400, 'Malformed authorization header');
+	}
+
+	let token;
+	try {
+		token = await verifyAndDecodeJWT(secret, env.OAUTH_JWT_SECRET);
+	} catch (e) {
+		return error(401, 'Unauthorized');
+	}
+
+	const user = await getUserOfComment(env, parseInt(params.id));
+
+	if (user == null || user.oauth_provider != token.provider || user.oauth_user_id != token.id) {
+		return error(401, 'Unauthorized');
+	}
+
+	await modifyComment(env, parseInt(params.id), body.comment);
 
 	const cache = caches.default;
 	ctx.waitUntil(purgeCommentCache(env, cache, new URL(req.url).origin, params.path));
@@ -256,7 +365,7 @@ router.get('/oauth/callback', async (req, env, ctx) => {
 	const token = await getAccessToken(env, code);
 	const userInfo = await getUserInfo(token);
 
-	const jwt = await signJWT({ id: userInfo.id, name: userInfo.name ?? userInfo.login }, env.OAUTH_JWT_SECRET);
+	const jwt = await signJWT({ provider: 'github', id: userInfo.id + '', name: userInfo.name ?? userInfo.login }, env.OAUTH_JWT_SECRET);
 
 	await registerUser(env, userInfo.name ?? userInfo.login, 'github', userInfo.id + '');
 
