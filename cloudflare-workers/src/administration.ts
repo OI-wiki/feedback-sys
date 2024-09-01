@@ -26,7 +26,7 @@ export async function compareCommitHash(env: Env, hash: string): Promise<boolean
 }
 
 export async function renameComments(env: Env, oldPath: string, newPath: string) {
-	if (oldPath == newPath) {
+	if (oldPath === newPath) {
 		throw new Error('The path you want to rename from and to are the same');
 	}
 
