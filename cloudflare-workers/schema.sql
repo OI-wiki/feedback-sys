@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS `comments` (
     `commenter_id` INTEGER NOT NULL, 
     `comment` TEXT NOT NULL,
     `created_time` TEXT NOT NULL, -- SQLite currently not support TIMESTAMP, use ISO 8601 DateTime
+    `last_edited_time` TEXT, -- SQLite currently not support TIMESTAMP, use ISO 8601 DateTime
     FOREIGN KEY(`offset_id`) REFERENCES `offsets`(`id`),
     FOREIGN KEY(`commenter_id`) REFERENCES `commenters`(`id`)
 );

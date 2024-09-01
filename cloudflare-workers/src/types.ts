@@ -31,6 +31,7 @@ export type GetCommentRespBody = {
 	commenter: Commenter;
 	comment: string;
 	created_time: string;
+	last_edited_time: string | null;
 }[];
 
 type ModifyCommentParam = {

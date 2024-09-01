@@ -192,6 +192,8 @@
     background-color: var(--review-on-text-color);
 
     z-index: 5;
+
+    user-select: none;
   }
 
   & .panel_main {
@@ -235,6 +237,8 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 
+    user-select: none;
+
     & .comments_group_text_content {
       padding: 0 8px;
 
@@ -265,6 +269,8 @@
 
     font-size: 12px;
 
+    user-select: none;
+
     & .comment_time {
       overflow: hidden;
       text-overflow: ellipsis;
@@ -291,6 +297,20 @@
     white-space: pre-wrap;
     hyphens: auto;
     word-break: break-word;
+  }
+
+  & .comment_footer {
+    font-size: 12px;
+
+    user-select: none;
+
+    & .comment_edit_tag {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      color: var(--review-secondary-text-color);
+    }
   }
 
   & .comment_actions_panel textarea {
@@ -325,6 +345,8 @@
     background-color: var(--review-on-text-color);
 
     font-size: 12px;
+
+    user-select: none;
   }
 
   &
@@ -355,6 +377,8 @@
     gap: 8px;
 
     margin-top: 12px;
+
+    user-select: none;
 
     & button[data-action="delete"] {
       color: var(--review-error-text-color);
