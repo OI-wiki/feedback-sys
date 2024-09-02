@@ -351,12 +351,8 @@ router.get('/oauth/callback', async (req, env, ctx) => {
 
 	const token = await getAccessToken(env, code);
 	const userInfo = await getUserInfo(token);
-	const membership = await getUserTeamMembership(
-		token,
-		userInfo.login,
-		env.GITHUB_ORG_ADMINISTRATOR_TEAM.split('/')[0],
-		env.GITHUB_ORG_ADMINISTRATOR_TEAM.split('/')[1],
-	);
+	const [org, team] = env.GITHUB_ORG_ADMINISTRATOR_TEAM.split('/');
+	const membership = await getUserTeamMembership(token, userInfo.login, org, team);
 
 	const jwt = await signJWT(
 		{
