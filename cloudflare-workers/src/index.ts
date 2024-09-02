@@ -11,7 +11,7 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-import { AutoRouter, cors, error } from 'itty-router';
+import { AutoRouter, cors, error, IRequest } from 'itty-router';
 import {
 	DeleteCommentIDParam,
 	GetCommentBody,
@@ -29,8 +29,9 @@ import { deleteComment, getComment, getUserOfComment, modifyComment, postComment
 import { setCommitHash, compareCommitHash, modifyComments, renameComments, sendCommentUpdateToTelegram } from './administration';
 import { matchCommentCache, purgeAllCommentCache, purgeCommentCache, putCommentCache } from './cache';
 import { signJWT } from './utils';
-import { getAccessToken, getUserInfo } from './oauth';
+import { getAccessToken, getUserInfo, getUserOrganizationMembership } from './oauth';
 import {
+	isAdmin,
 	isSameCommenter,
 	validateAdministratorSecret,
 	validateAndDecodeAuthorizationToken,
@@ -63,7 +64,7 @@ const { preflight, corsify } = cors({
 	maxAge: 86400,
 });
 
-const router = AutoRouter({
+const router = AutoRouter<IRequest, [Env, ExecutionContext]>({
 	before: [preflight],
 	finally: [corsify],
 });
@@ -155,7 +156,7 @@ router.delete('/comment/:path/id/:id', async (req, env, ctx) => {
 
 	const user = await getUserOfComment(env, parseInt(params.id));
 
-	if (!isSameCommenter(user, token)) {
+	if (!isSameCommenter(user, token) && !isAdmin(token)) {
 		return error(401, 'Unauthorized');
 	}
 
@@ -200,7 +201,7 @@ router.patch('/comment/:path/id/:id', async (req, env, ctx) => {
 
 	const user = await getUserOfComment(env, parseInt(params.id));
 
-	if (!isSameCommenter(user, token)) {
+	if (!isSameCommenter(user, token) && !isAdmin(token)) {
 		return error(401, 'Unauthorized');
 	}
 
@@ -309,10 +310,15 @@ router.get('/meta/github-app', async (req, env, ctx) => {
 });
 
 router.get('/oauth/callback', async (req, env, ctx) => {
-	const code = req.query['code'] as string | undefined;
+	if (req.query['setup_action'] === 'install') {
+		return {
+			status: 200,
+		} satisfies ResponseBody;
+	}
+
 	const rawState = req.query['state'] as string | undefined;
 
-	if (code == undefined || rawState == undefined) {
+	if (rawState == undefined) {
 		return error(400, 'Invalid request');
 	}
 
@@ -322,11 +328,35 @@ router.get('/oauth/callback', async (req, env, ctx) => {
 		return error(400, 'Invalid request');
 	}
 
+	const err = req.query['error'] as string | undefined;
+
+	if (err === 'access_denied') {
+		return new Response(null, {
+			status: 302,
+			headers: {
+				Location: state.redirect,
+			},
+		});
+	}
+
+	if (err != undefined) {
+		return error(400, `OAuth error (${err}): ${req.query['error_description']}`);
+	}
+
+	const code = req.query['code'] as string | undefined;
+
+	if (code == undefined) {
+		return error(400, 'Invalid request');
+	}
+
 	const token = await getAccessToken(env, code);
-	const userInfo = await getUserInfo(token);
+	const userInfoPromise = getUserInfo(token);
+	const membershipPromise = getUserOrganizationMembership(token, env.GITHUB_ORG);
+
+	const [userInfo, membership] = await Promise.all([userInfoPromise, membershipPromise]);
 
 	const jwt = await signJWT(
-		{ provider: 'github', id: userInfo.id + '', name: userInfo.name ?? userInfo.login } satisfies JWTPayload,
+		{ provider: 'github', id: userInfo.id + '', name: userInfo.name ?? userInfo.login, role: membership?.role } satisfies JWTPayload,
 		env.OAUTH_JWT_SECRET,
 	);
 

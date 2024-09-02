@@ -146,15 +146,12 @@ export async function signJWT(
 	);
 }
 
-export async function verifyAndDecodeJWT(
-	token: string,
-	secret: string,
-): Promise<{
-	[key: string]: any;
-}> {
-	await jwt.verify(token, secret, { algorithm: 'HS256', throwError: true });
+export async function verifyAndDecodeJWT<T = any>(token: string, secret: string): Promise<T> {
+	const result = await jwt.verify(token, secret, { algorithm: 'HS256' });
 
-	return jwt.decode(token).payload as {
-		[key: string]: any;
-	};
+	if (!result) {
+		throw new Error('Failed to verify JWT token');
+	}
+
+	return jwt.decode(token).payload as T;
 }

@@ -102,6 +102,7 @@ database_id = "eba686c4-352d-4a8d-8f4e-fb3801166973" # 和这里
 4. `GITHUB_APP_CLIENT_ID`：GitHub App Client ID，用于 GitHub 登录（创建 GitHub App 时请务必勾选 Request User Authorization (OAuth) during installation，其余选项可以保持默认）
 5. `GITHUB_APP_CLIENT_SECRET`：GitHub App Client Secret，用处同上
 6. `OAUTH_JWT_SECRET`：一段任意的字符串，作为密钥，用于签发 JWT
+7. `GITHUB_ORG`：GitHub 组织名，该组织下的管理员用户会成为系统管理员，可编辑和删除任意评论（请务必提前为您的组织安装上述 GitHub App 以获取所需权限）
 
 完成后，依次为上述数据运行下述指令，并依照提示传入准备好的数据：
 
@@ -130,7 +131,7 @@ yarn add oiwiki-feedback-sys-frontend
 
 ```html
 <!-- 对于 ES Module -->
- <script type="text/javascript" src="https://unpkg.com/oiwiki-feedback-sys-frontend@0.3.1/dist/oiwiki-feedback-sys-frontend.js"></script>
+ <script type="text/javascript" src="https://unpkg.com/oiwiki-feedback-sys-frontend@latest/dist/oiwiki-feedback-sys-frontend.js"></script>
 
 <!-- 对于 UMD 和直接引入 -->
 <script type="text/javascript" src="https://unpkg.com/oiwiki-feedback-sys-frontend@latest/dist/oiwiki-feedback-sys-frontend.umd.cjs"></script>

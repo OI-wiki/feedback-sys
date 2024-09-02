@@ -40,6 +40,7 @@ type JWTPayload = {
   provider: "github";
   id: string;
   name: string;
+  role?: "admin" | "member" | "billing_manager";
 };
 
 const dateTimeFormatter = new Intl.DateTimeFormat("zh-CN", {
@@ -570,9 +571,17 @@ const _renderComments = (comments: Comment[]) => {
 
       if (
         !userInfo ||
-        userInfo.provider != comment.commenter.oauth_provider ||
-        userInfo.id != comment.commenter.oauth_user_id
+        userInfo.provider !== comment.commenter.oauth_provider ||
+        userInfo.id !== comment.commenter.oauth_user_id
       ) {
+        commentActionsHeader.style.display = "none";
+      }
+
+      if (userInfo && userInfo.role === "admin") {
+        commentActionsHeader.style.display = "";
+      }
+
+      if (comment.id === -1) {
         commentActionsHeader.style.display = "none";
       }
 

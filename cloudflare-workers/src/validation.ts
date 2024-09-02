@@ -55,7 +55,7 @@ export async function validateAndDecodeAuthorizationToken(env: Env, req: Request
 
 	let token;
 	try {
-		token = (await verifyAndDecodeJWT(secret, env.OAUTH_JWT_SECRET)) as JWTPayload;
+		token = await verifyAndDecodeJWT<JWTPayload>(secret, env.OAUTH_JWT_SECRET);
 	} catch (e) {
 		return null;
 	}
@@ -88,4 +88,8 @@ export function isSameCommenter(commenter: Commenter | null, token: JWTPayload |
 		return false;
 	}
 	return commenter.oauth_provider === token.provider && commenter.oauth_user_id === token.id;
+}
+
+export function isAdmin(token: JWTPayload | null): boolean {
+	return token !== null && token.role === 'admin';
 }

@@ -38,6 +38,7 @@ jobs:
             GITHUB_APP_CLIENT_ID
             GITHUB_APP_CLIENT_SECRET
             OAUTH_JWT_SECRET
+            GITHUB_ORG
           preCommands: |
             wrangler d1 execute comments --yes --file=schema.sql
         env:
@@ -47,6 +48,7 @@ jobs:
           GITHUB_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
           GITHUB_APP_CLIENT_SECRET: ${{ secrets.GH_APP_CLIENT_SECRET }}
           OAUTH_JWT_SECRET: ${{ secrets.OAUTH_JWT_SECRET }}
+          GITHUB_ORG: ${{ secrets.GH_ORG }}
   upload-artifacts:
     name: Upload Artifacts
     runs-on: ubuntu-latest

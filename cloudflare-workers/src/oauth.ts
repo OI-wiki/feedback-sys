@@ -1,6 +1,6 @@
 // https://docs.github.com/zh/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-user-access-token-for-a-github-app
 
-import { GitHubGetUserInfoResp } from './types';
+import { GitHubGetUserInfoResp, GithubOrgMembershipResp } from './types';
 
 type AccessTokenResp = {
 	access_token: string;
@@ -41,4 +41,24 @@ export async function getUserInfo(token: string): Promise<GitHubGetUserInfoResp>
 	}
 
 	return (await response.json()) as GitHubGetUserInfoResp;
+}
+
+export async function getUserOrganizationMembership(token: string, org: string): Promise<GithubOrgMembershipResp | null> {
+	const response = await fetch(`https://api.github.com/user/memberships/orgs/${org}`, {
+		headers: {
+			Accept: 'application/vnd.github+json',
+			Authorization: `Bearer ${token}`,
+			'User-Agent': 'OI-Wiki Feedback System',
+		},
+	});
+
+	if (response.status === 404) {
+		return null;
+	}
+
+	if (!response.ok) {
+		throw new Error(await response.text());
+	}
+
+	return (await response.json()) as GithubOrgMembershipResp;
 }
