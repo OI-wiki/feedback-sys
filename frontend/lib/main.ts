@@ -12,7 +12,7 @@ const groupBy = function <K extends string, T>(arr: T[], func: (el: T) => K) {
     },
     {} as {
       [key: string]: T[];
-    }
+    },
   );
 };
 
@@ -86,7 +86,7 @@ const _getJWT = () => {
   // https://developer.mozilla.org/zh-CN/docs/Web/API/Document/cookie#%E7%A4%BA%E4%BE%8B_2_%E5%BE%97%E5%88%B0%E5%90%8D%E4%B8%BA_test2_%E7%9A%84_cookie
   return document.cookie.replace(
     /(?:(?:^|.*;\s*)oauth_token\s*\=\s*([^;]*).*$)|^.*$/,
-    "$1"
+    "$1",
   );
 };
 
@@ -129,7 +129,7 @@ const _registerDialog = ({
     <${tag} id="${id}">
       ${content.trim()}
     </${tag}>
-    `.trim()
+    `.trim(),
   );
   dialog = document.querySelector(`#${id}`)! as HTMLElement;
 
@@ -223,7 +223,7 @@ const _openCommentsPanel = async () => {
     comments.find(
       (it) =>
         it.offset.start === parseInt(selected.dataset.originalDocumentStart!) &&
-        it.offset.end === parseInt(selected.dataset.originalDocumentEnd!)
+        it.offset.end === parseInt(selected.dataset.originalDocumentEnd!),
     ) === undefined
   ) {
     comments.push({
@@ -246,7 +246,7 @@ const _openCommentsPanel = async () => {
 
   _renderComments(comments);
   let selectedCommentsGroup = document.querySelector(
-    `#review-comments-panel .comments_group[data-original-document-start="${selectedOffset?.dataset.originalDocumentStart}"][data-original-document-end="${selectedOffset?.dataset.originalDocumentEnd}"]`
+    `#review-comments-panel .comments_group[data-original-document-start="${selectedOffset?.dataset.originalDocumentStart}"][data-original-document-end="${selectedOffset?.dataset.originalDocumentEnd}"]`,
   );
 
   selectedCommentsGroup?.classList.add("review_selected");
@@ -254,6 +254,10 @@ const _openCommentsPanel = async () => {
     behavior: "smooth",
     block: "start",
   });
+  const textarea = selectedCommentsGroup?.querySelector(
+    ".comment_actions_panel textarea",
+  ) as HTMLTextAreaElement | undefined;
+  textarea?.focus();
 
   commentsButton.classList.add("review_hidden");
   commentsPanel.classList.remove("review_hidden");
@@ -296,7 +300,7 @@ const _submitComment = async ({
         ...comment,
         commit_hash: commitHash,
       }),
-    }
+    },
   );
 
   const id = commentsCache?.length ?? -1;
@@ -326,7 +330,7 @@ const _submitComment = async ({
 
   if (commentsCache) {
     commentsCache = commentsCache.map((it) =>
-      it.id === id ? { ...it, pending: false } : it
+      it.id === id ? { ...it, pending: false } : it,
     );
   }
 
@@ -352,12 +356,12 @@ const _modifyComment = async ({
       body: JSON.stringify({
         comment,
       }),
-    }
+    },
   );
 
   if (commentsCache) {
     commentsCache = commentsCache.map((it) =>
-      it.id === id ? { ...it, pending: true } : it
+      it.id === id ? { ...it, pending: true } : it,
     );
   }
 
@@ -366,7 +370,7 @@ const _modifyComment = async ({
   if (!resp.ok) {
     if (commentsCache) {
       commentsCache = commentsCache.map((it) =>
-        it.id === id ? { ...it, pending: false } : it
+        it.id === id ? { ...it, pending: false } : it,
       );
     }
     throw resp;
@@ -374,7 +378,7 @@ const _modifyComment = async ({
 
   if (commentsCache) {
     commentsCache = commentsCache.map((it) =>
-      it.id === id ? { ...it, comment, pending: false } : it
+      it.id === id ? { ...it, comment, pending: false } : it,
     );
   }
 
@@ -390,12 +394,12 @@ const _deleteComment = async ({ id }: { id: number }) => {
       headers: {
         Authorization: `Bearer ${_getJWT()}`,
       },
-    }
+    },
   );
 
   if (commentsCache) {
     commentsCache = commentsCache.map((it) =>
-      it.id === id ? { ...it, pending: true } : it
+      it.id === id ? { ...it, pending: true } : it,
     );
   }
 
@@ -404,7 +408,7 @@ const _deleteComment = async ({ id }: { id: number }) => {
   if (!resp.ok) {
     if (commentsCache) {
       commentsCache = commentsCache.map((it) =>
-        it.id === id ? { ...it, pending: false } : it
+        it.id === id ? { ...it, pending: false } : it,
       );
     }
     throw resp;
@@ -424,7 +428,7 @@ const _fetchComments = async (force: boolean = false) => {
   }
 
   const res = await fetch(
-    `${apiEndpoint}comment/${encodeURIComponent(new URL(window.location.href).pathname)}`
+    `${apiEndpoint}comment/${encodeURIComponent(new URL(window.location.href).pathname)}`,
   );
   if (!res.ok) {
     throw res;
@@ -438,17 +442,17 @@ const _fetchComments = async (force: boolean = false) => {
 
 const _renderComments = (comments: Comment[]) => {
   const commentsEl = commentsPanel.querySelector(
-    ".panel_main"
+    ".panel_main",
   )! as HTMLDivElement;
 
   const fragment = document.createDocumentFragment();
 
   const group = groupBy(
     comments,
-    (it) => `${it.offset.start}-${it.offset.end}`
+    (it) => `${it.offset.start}-${it.offset.end}`,
   );
   for (const key of Object.keys(group).sort(
-    (a, b) => parseInt(a.split("-")[0]) - parseInt(b.split("-")[0])
+    (a, b) => parseInt(a.split("-")[0]) - parseInt(b.split("-")[0]),
   )) {
     const container = document.createElement("div");
     container.classList.add("comments_group");
@@ -458,7 +462,7 @@ const _renderComments = (comments: Comment[]) => {
     container.dataset.originalDocumentEnd = offsets[1];
 
     const paragraph = document.querySelector<HTMLDivElement>(
-      `.review_enabled[data-original-document-start="${container.dataset.originalDocumentStart}"][data-original-document-end="${container.dataset.originalDocumentEnd}"]`
+      `.review_enabled[data-original-document-start="${container.dataset.originalDocumentStart}"][data-original-document-end="${container.dataset.originalDocumentEnd}"]`,
     );
     const content = paragraph?.textContent ?? "";
 
@@ -473,7 +477,7 @@ const _renderComments = (comments: Comment[]) => {
             <span class="comment_username"></span>
             <button class="comment_actions_item" data-action="logout">退出登录</button>
           </div>
-          <textarea required placeholder="写下你的评论..."  autocapitalize="sentences" autocomplete="on" spellcheck="true" autofocus="true" maxlength="65535"></textarea>
+          <textarea required placeholder="写下你的评论..."  autocapitalize="sentences" autocomplete="on" spellcheck="true" maxlength="65535"></textarea>
           <div class="comment_actions_footer">
             <span class="comment_actions_notification"></span>
             <div class="comment_actions comment_actions_login">
@@ -501,15 +505,15 @@ const _renderComments = (comments: Comment[]) => {
       });
 
     const username = container.querySelector(
-      ".comment_username"
+      ".comment_username",
     ) as HTMLDivElement;
 
     const commentActionsLogin = container.querySelector(
-      ".comment_actions_login"
+      ".comment_actions_login",
     ) as HTMLDivElement;
 
     const commentActionsLogout = container.querySelector(
-      "button.comment_actions_item[data-action='logout']"
+      "button.comment_actions_item[data-action='logout']",
     ) as HTMLButtonElement;
 
     const userInfo = _decodeJWT();
@@ -522,7 +526,7 @@ const _renderComments = (comments: Comment[]) => {
     }
 
     const commentActionsModify = container.querySelector(
-      ".comment_actions_modify"
+      ".comment_actions_modify",
     ) as HTMLDivElement;
 
     commentActionsModify.style.display = "none";
@@ -547,11 +551,15 @@ const _renderComments = (comments: Comment[]) => {
         behavior: "smooth",
         block: "center",
       });
+      const textarea = container.querySelector(
+        ".comment_actions_panel textarea",
+      ) as HTMLTextAreaElement;
+      textarea.focus();
     });
 
     const commentsGroup = group[key].sort(
       (a, b) =>
-        new Date(a.created_time).getTime() - new Date(b.created_time).getTime()
+        new Date(a.created_time).getTime() - new Date(b.created_time).getTime(),
     );
     const main = container.querySelector(".comments_group_main")!;
 
@@ -595,13 +603,13 @@ const _renderComments = (comments: Comment[]) => {
 
       if (!comment.commenter.avatar_url) {
         const userAvatar = commentEl.querySelector(
-          ".comment_user_avatar"
+          ".comment_user_avatar",
         ) as HTMLDivElement;
         userAvatar.innerHTML = iconDefaultAvatar;
       }
 
       const commentActionsHeader = commentEl.querySelector(
-        ".comment_header .comment_actions"
+        ".comment_header .comment_actions",
       ) as HTMLDivElement;
 
       if (
@@ -621,11 +629,11 @@ const _renderComments = (comments: Comment[]) => {
       }
 
       const commentHeaderCreatedTime = commentEl.querySelector(
-        ".comment_header .comment_created_time"
+        ".comment_header .comment_created_time",
       ) as HTMLSpanElement;
 
       const commentHeaderEditedTime = commentEl.querySelector(
-        ".comment_header .comment_edited_time"
+        ".comment_header .comment_edited_time",
       ) as HTMLSpanElement;
 
       commentHeaderEditedTime.style.display = "none";
@@ -643,7 +651,7 @@ const _renderComments = (comments: Comment[]) => {
       });
 
       const commentEditTag = commentEl.querySelector(
-        ".comment_main .comment_edit_tag"
+        ".comment_main .comment_edit_tag",
       ) as HTMLSpanElement;
 
       if (!comment.last_edited_time) {
@@ -659,11 +667,11 @@ const _renderComments = (comments: Comment[]) => {
         const target = e.target as HTMLButtonElement;
 
         const textarea = container.querySelector(
-          ".comment_actions_panel textarea"
+          ".comment_actions_panel textarea",
         ) as HTMLTextAreaElement;
 
         const notification = container.querySelector(
-          ".comment_actions_notification"
+          ".comment_actions_notification",
         ) as HTMLSpanElement;
 
         const _handleError = async (e: any) => {
@@ -740,10 +748,10 @@ const _renderComments = (comments: Comment[]) => {
               .finally(() => {
                 _openCommentsPanel().then(() => {
                   const newNotification = commentsPanel.querySelector(
-                    ".review_selected .comment_actions_notification"
+                    ".review_selected .comment_actions_notification",
                   );
                   const newTextArea = commentsPanel.querySelector(
-                    ".review_selected .comment_actions_panel textarea"
+                    ".review_selected .comment_actions_panel textarea",
                   ) as HTMLTextAreaElement;
                   if (newNotification) {
                     newNotification.textContent = notification.textContent;
@@ -756,7 +764,7 @@ const _renderComments = (comments: Comment[]) => {
 
             _openCommentsPanel().then(() => {
               const newSubmitButton = commentsPanel.querySelector(
-                ".review_selected button[data-action='submit']"
+                ".review_selected button[data-action='submit']",
               ) as HTMLButtonElement;
               if (newSubmitButton) {
                 newSubmitButton.disabled = true;
@@ -767,13 +775,13 @@ const _renderComments = (comments: Comment[]) => {
           case "modify": {
             container
               .querySelector(
-                `.comment[data-id="${container.dataset.modifingId}"]`
+                `.comment[data-id="${container.dataset.modifingId}"]`,
               )
               ?.classList.remove("comment_pending");
 
             target.dataset.tag = "using";
             const commentEl = container.querySelector(
-              `.comment:has([data-tag="using"][data-action="${target?.dataset.action}"])`
+              `.comment:has([data-tag="using"][data-action="${target?.dataset.action}"])`,
             ) as HTMLDivElement;
             delete target.dataset.tag;
             const id = commentEl?.dataset?.id;
@@ -791,7 +799,7 @@ const _renderComments = (comments: Comment[]) => {
           case "modify_cancel": {
             container
               .querySelector(
-                `.comment[data-id="${container.dataset.modifingId}"]`
+                `.comment[data-id="${container.dataset.modifingId}"]`,
               )
               ?.classList.remove("comment_pending");
             commentActionsModify.style.display = "none";
@@ -814,10 +822,10 @@ const _renderComments = (comments: Comment[]) => {
               .finally(() => {
                 _openCommentsPanel().then(() => {
                   const newNotification = commentsPanel.querySelector(
-                    ".review_selected .comment_actions_notification"
+                    ".review_selected .comment_actions_notification",
                   );
                   const newTextArea = commentsPanel.querySelector(
-                    ".review_selected .comment_actions_panel textarea"
+                    ".review_selected .comment_actions_panel textarea",
                   ) as HTMLTextAreaElement;
                   if (newNotification) {
                     newNotification.textContent = notification.textContent;
@@ -834,7 +842,7 @@ const _renderComments = (comments: Comment[]) => {
           case "delete": {
             target.dataset.tag = "using";
             const commentEl = container.querySelector(
-              `.comment:has([data-tag="using"][data-action="${target?.dataset.action}"])`
+              `.comment:has([data-tag="using"][data-action="${target?.dataset.action}"])`,
             ) as HTMLDivElement;
             delete target.dataset.tag;
             const id = commentEl.dataset?.id;
@@ -845,10 +853,10 @@ const _renderComments = (comments: Comment[]) => {
               .finally(() => {
                 _openCommentsPanel().then(() => {
                   const newNotification = commentsPanel.querySelector(
-                    ".review_selected .comment_actions_notification"
+                    ".review_selected .comment_actions_notification",
                   );
                   const newTextArea = commentsPanel.querySelector(
-                    ".review_selected .comment_actions_panel textarea"
+                    ".review_selected .comment_actions_panel textarea",
                   ) as HTMLTextAreaElement;
                   if (newNotification) {
                     newNotification.textContent = notification.textContent;
@@ -861,13 +869,13 @@ const _renderComments = (comments: Comment[]) => {
 
             _openCommentsPanel().then(() => {
               const newNotification = commentsPanel.querySelector(
-                ".review_selected .comment_actions_notification"
+                ".review_selected .comment_actions_notification",
               );
               const newDeleteButton = commentsPanel.querySelector(
-                `.comment[data-id="${id}"] button[data-action="delete"]`
+                `.comment[data-id="${id}"] button[data-action="delete"]`,
               ) as HTMLButtonElement;
               const newModifyButton = commentsPanel.querySelector(
-                `.comment[data-id="${id}"] button[data-action="modify"]`
+                `.comment[data-id="${id}"] button[data-action="modify"]`,
               ) as HTMLButtonElement;
               if (newNotification) {
                 newNotification.textContent = notification.textContent;
@@ -894,16 +902,16 @@ const _renderComments = (comments: Comment[]) => {
   commentsEl.appendChild(fragment);
 
   for (const commentEl of commentsPanel.querySelectorAll<HTMLDivElement>(
-    ".comment"
+    ".comment",
   )) {
     const commentMain = commentEl.querySelector(
-      ".comment_main"
+      ".comment_main",
     ) as HTMLDivElement;
     const commentExpand = commentEl.querySelector(
-      `.comment_main .comment_expand[data-action="expand"]`
+      `.comment_main .comment_expand[data-action="expand"]`,
     ) as HTMLButtonElement;
     const commentFold = commentEl.querySelector(
-      `.comment_main .comment_expand[data-action="fold"]`
+      `.comment_main .comment_expand[data-action="fold"]`,
     ) as HTMLButtonElement;
 
     const offsetHeight = commentMain.offsetHeight;
@@ -929,8 +937,8 @@ const _renderComments = (comments: Comment[]) => {
 const _updateAvailableComments = async () => {
   const offsets = Array.from(
     document.querySelectorAll<HTMLElement>(
-      ".review_enabled[data-original-document-start][data-original-document-end]"
-    )
+      ".review_enabled[data-original-document-start][data-original-document-end]",
+    ),
   );
 
   await _fetchComments();
@@ -942,7 +950,7 @@ const _updateAvailableComments = async () => {
         (it) =>
           it.offset.start ===
             parseInt(offset!.dataset.originalDocumentStart!) &&
-          it.offset.end === parseInt(offset!.dataset.originalDocumentEnd!)
+          it.offset.end === parseInt(offset!.dataset.originalDocumentEnd!),
       )
     ) {
       offset.classList.add("review_has_comments");
@@ -954,7 +962,7 @@ export const __VERSION__: string = __LIB_VERSION__;
 
 export function setupReview(
   el: Element,
-  { apiEndpoint: endpoint = "/api" }: { apiEndpoint?: string } = {}
+  { apiEndpoint: endpoint = "/api" }: { apiEndpoint?: string } = {},
 ) {
   apiEndpoint = endpoint.endsWith("/") ? endpoint : endpoint + "/";
 
@@ -962,13 +970,13 @@ export function setupReview(
 
   const offsets = Array.from(
     el.querySelectorAll<HTMLElement>(
-      "[data-original-document-start][data-original-document-end]"
-    )
+      "[data-original-document-start][data-original-document-end]",
+    ),
   );
 
   if (!offsets) {
     console.warn(
-      "oiwiki-feedback-sys-frontend not found any offsets to inject, quitting..."
+      "oiwiki-feedback-sys-frontend not found any offsets to inject, quitting...",
     );
     return;
   }
@@ -1036,7 +1044,7 @@ export function setupReview(
   _closeCommentsPanel();
 
   console.log(
-    `oiwiki-feedback-sys-frontend version ${__VERSION__} has been successfully installed.`
+    `oiwiki-feedback-sys-frontend version ${__VERSION__} has been successfully installed.`,
   );
 
   globalInitialized = true;
