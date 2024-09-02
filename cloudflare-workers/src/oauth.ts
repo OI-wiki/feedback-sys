@@ -43,8 +43,13 @@ export async function getUserInfo(token: string): Promise<GitHubGetUserInfoResp>
 	return (await response.json()) as GitHubGetUserInfoResp;
 }
 
-export async function getUserOrganizationMembership(token: string, org: string): Promise<GithubOrgMembershipResp | null> {
-	const response = await fetch(`https://api.github.com/user/memberships/orgs/${org}`, {
+export async function getUserTeamMembership(
+	token: string,
+	login: string,
+	org: string,
+	team: string,
+): Promise<GithubOrgMembershipResp | null> {
+	const response = await fetch(`https://api.github.com/orgs/${org}/teams/${team}/memberships/${login}`, {
 		headers: {
 			Accept: 'application/vnd.github+json',
 			Authorization: `Bearer ${token}`,

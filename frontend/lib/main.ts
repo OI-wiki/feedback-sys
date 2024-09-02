@@ -40,7 +40,7 @@ type JWTPayload = {
   provider: "github";
   id: string;
   name: string;
-  role?: "admin" | "member" | "billing_manager";
+  isAdmin?: boolean;
 };
 
 const dateTimeFormatter = new Intl.DateTimeFormat("zh-CN", {
@@ -577,7 +577,7 @@ const _renderComments = (comments: Comment[]) => {
         commentActionsHeader.style.display = "none";
       }
 
-      if (userInfo && userInfo.role === "admin") {
+      if (userInfo && userInfo.isAdmin === true) {
         commentActionsHeader.style.display = "";
       }
 
