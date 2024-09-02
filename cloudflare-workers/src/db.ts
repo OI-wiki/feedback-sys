@@ -72,14 +72,14 @@ export async function getUserOfComment(env: Env, comment_id: number): Promise<Co
 		.first();
 }
 
-export async function registerUser(env: Env, name: string, oauth_provider: string, oauth_user_id: string) {
+export async function registerUser(env: Env, name: string, oauth_provider: string, oauth_user_id: string, avatar_url: string) {
 	const db = env.DB;
 
 	await db
 		.prepare(
-			'INSERT INTO commenters (name, oauth_provider, oauth_user_id) VALUES (?, ?, ?) ON CONFLICT(oauth_provider, oauth_user_id) DO UPDATE SET name = excluded.name',
+			'INSERT INTO commenters (name, oauth_provider, oauth_user_id, avatar) VALUES (?, ?, ?, ?) ON CONFLICT(oauth_provider, oauth_user_id) DO UPDATE SET name = excluded.name',
 		)
-		.bind(name, oauth_provider, oauth_user_id)
+		.bind(name, oauth_provider, oauth_user_id, avatar_url)
 		.run();
 }
 
@@ -106,6 +106,7 @@ export async function getComment(env: Env, req: GetComment): Promise<GetCommentR
 				name: comment.name as string,
 				oauth_provider: comment.oauth_provider as string,
 				oauth_user_id: comment.oauth_user_id as string,
+				avatar: comment.avatar as string,
 			},
 			comment: comment.comment as string,
 			created_time: comment.created_time as string,

@@ -364,7 +364,7 @@ router.get('/oauth/callback', async (req, env, ctx) => {
 		env.OAUTH_JWT_SECRET,
 	);
 
-	await registerUser(env, userInfo.name ?? userInfo.login, 'github', userInfo.id + '');
+	await registerUser(env, userInfo.name ?? userInfo.login, 'github', userInfo.id + '', userInfo.avatar_url);
 
 	return new Response(null, {
 		status: 302,
