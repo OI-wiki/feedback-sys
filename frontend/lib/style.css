@@ -370,21 +370,40 @@
     display: none;
   }
 
+  & .comment_actions_footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 8px;
+
+    margin-top: 12px;
+
+    & .comment_actions_notification {
+      flex: 1;
+
+      overflow: hidden;
+      word-wrap: break-word;
+      word-break: break-all;
+
+      color: var(--review-error-text-color);
+    }
+
+    & .comment_actions {
+      flex: 0 1 auto;
+    }
+  }
+
   & .comment_actions {
     display: flex;
     justify-content: flex-end;
     align-items: center;
     gap: 8px;
 
-    margin-top: 12px;
-
     user-select: none;
 
     & button[data-action="delete"] {
-      color: var(--review-error-text-color);
-    }
-
-    & .comment_actions_notification {
       color: var(--review-error-text-color);
     }
 

@@ -157,7 +157,7 @@ router.delete('/comment/:path/id/:id', async (req, env, ctx) => {
 	const user = await getUserOfComment(env, parseInt(params.id));
 
 	if (!isSameCommenter(user, token) && !isAdmin(token)) {
-		return error(401, 'Unauthorized');
+		return error(403, 'Forbidden');
 	}
 
 	await deleteComment(env, parseInt(params.id));
@@ -202,7 +202,7 @@ router.patch('/comment/:path/id/:id', async (req, env, ctx) => {
 	const user = await getUserOfComment(env, parseInt(params.id));
 
 	if (!isSameCommenter(user, token) && !isAdmin(token)) {
-		return error(401, 'Unauthorized');
+		return error(403, 'Forbidden');
 	}
 
 	await modifyComment(env, parseInt(params.id), body.comment);
