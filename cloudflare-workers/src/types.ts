@@ -98,12 +98,14 @@ export type GitHubGetUserInfoResp = {
 	id: number;
 	name?: string;
 	email: string;
+	avatar_url: string;
 };
 
 export type Commenter = {
 	oauth_provider: string;
 	oauth_user_id: string;
 	name: string;
+	avatar: string;
 };
 
 export type GithubOrgMembershipResp = {

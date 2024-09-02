@@ -2,6 +2,7 @@ import "./style.css";
 import iconAddComment from "iconify/add-comment-outline-rounded";
 import iconComment from "iconify/comment-outline-rounded";
 import iconClose from "iconify/close";
+import iconDefaultAvatar from "iconify/account-circle";
 
 const groupBy = function <K extends string, T>(arr: T[], func: (el: T) => K) {
   return arr.reduce(
@@ -25,6 +26,7 @@ type Comment = {
     oauth_provider: "github";
     oauth_user_id: string;
     name: string | null;
+    avatar?: string;
   };
   comment: string;
   created_time: string;
@@ -235,7 +237,7 @@ const _openCommentsPanel = async () => {
         oauth_provider: "github",
         oauth_user_id: "-1",
       },
-      comment: "",
+      comment: "<发布新评论>",
       created_time: new Date().toISOString(),
       last_edited_time: null,
       pending: true,
@@ -561,26 +563,40 @@ const _renderComments = (comments: Comment[]) => {
       }
       commentEl.dataset.id = comment.id.toString();
       commentEl.innerHTML = `
-        <div class="comment_header">
-          <span class="comment_commenter"></span>
-          <span class="comment_time comment_created_time">发布于 ${dateTimeFormatter.format(new Date(comment.created_time))}</span>
-          <span class="comment_time comment_edited_time">最后编辑于 ${comment.last_edited_time ? dateTimeFormatter.format(new Date(comment.last_edited_time)) : ""}</span>
-          <div class="comment_actions">
-            <button class="comment_actions_item" data-action="modify">修改</button>
-            <button class="comment_actions_item" data-action="delete">删除</button>
+        <div class="comment_side">
+          <div class="comment_user_avatar">
+            <img src="${comment.commenter.avatar}" alt="user avatar"/>
           </div>
         </div>
-        <div class="comment_main">
-          <span class="comment_content"></span>
-          <span class="comment_edit_tag">(已编辑)</span>
-          <button class="comment_actions_item comment_expand" data-action="expand">展开</button>
-          <button class="comment_actions_item comment_expand" data-action="fold">折叠</button>
+        <div class="comment_base">
+          <div class="comment_header">
+            <span class="comment_commenter"></span>
+            <span class="comment_time comment_created_time">发布于 ${dateTimeFormatter.format(new Date(comment.created_time))}</span>
+            <span class="comment_time comment_edited_time">最后编辑于 ${comment.last_edited_time ? dateTimeFormatter.format(new Date(comment.last_edited_time)) : ""}</span>
+            <div class="comment_actions">
+              <button class="comment_actions_item" data-action="modify">修改</button>
+              <button class="comment_actions_item" data-action="delete">删除</button>
+            </div>
+          </div>
+          <div class="comment_main">
+            <span class="comment_content"></span>
+            <span class="comment_edit_tag">(已编辑)</span>
+            <button class="comment_actions_item comment_expand" data-action="expand">展开</button>
+            <button class="comment_actions_item comment_expand" data-action="fold">折叠</button>
+          </div>
         </div>
       `.trim();
       commentEl.querySelector(".comment_commenter")!.textContent =
         comment.commenter.name;
       commentEl.querySelector(".comment_main .comment_content")!.textContent =
         comment.comment;
+
+      if (!comment.commenter.avatar) {
+        const userAvatar = commentEl.querySelector(
+          ".comment_user_avatar",
+        ) as HTMLDivElement;
+        userAvatar.innerHTML = iconDefaultAvatar;
+      }
 
       const commentActionsHeader = commentEl.querySelector(
         ".comment_header .comment_actions",
@@ -753,8 +769,11 @@ const _renderComments = (comments: Comment[]) => {
               )
               ?.classList.remove("comment_pending");
 
-            const commentEl =
-              target.parentElement?.parentElement?.parentElement;
+            target.dataset.tag = "using";
+            const commentEl = container.querySelector(
+              `.comment:has([data-tag="using"][data-action="${target?.dataset.action}"])`,
+            ) as HTMLDivElement;
+            delete target.dataset.tag;
             const id = commentEl?.dataset?.id;
             if (id == undefined) return;
 
@@ -811,8 +830,12 @@ const _renderComments = (comments: Comment[]) => {
             break;
           }
           case "delete": {
-            const id =
-              target.parentElement?.parentElement?.parentElement?.dataset?.id;
+            target.dataset.tag = "using";
+            const commentEl = container.querySelector(
+              `.comment:has([data-tag="using"][data-action="${target?.dataset.action}"])`,
+            ) as HTMLDivElement;
+            delete target.dataset.tag;
+            const id = commentEl.dataset?.id;
             if (id == undefined) return;
 
             _deleteComment({ id: parseInt(id) })
