@@ -38,7 +38,7 @@ jobs:
             GITHUB_APP_CLIENT_ID
             GITHUB_APP_CLIENT_SECRET
             OAUTH_JWT_SECRET
-            GITHUB_ORG
+            GITHUB_ORG_ADMINISTRATOR_TEAM 
           preCommands: |
             wrangler d1 execute comments --yes --file=schema.sql
         env:
