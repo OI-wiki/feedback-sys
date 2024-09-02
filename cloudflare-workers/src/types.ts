@@ -106,8 +106,13 @@ export type Commenter = {
 	name: string;
 };
 
+export type GithubOrgMembershipResp = {
+	role: 'admin' | 'member' | 'billing_manager';
+};
+
 export type JWTPayload = {
 	provider: string;
 	id: string;
 	name: string;
+	role?: GithubOrgMembershipResp['role'];
 };
