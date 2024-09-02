@@ -554,14 +554,15 @@ const _renderComments = (comments: Comment[]) => {
             <button data-action="delete">删除</button>
           </div>
         </div>
-        <div class="comment_main"></div>
-        <div class="comment_footer">
+        <div class="comment_main">
+          <span class="comment_content"></span>
           <span class="comment_edit_tag">(已编辑)</span>
         </div>
       `.trim();
       commentEl.querySelector(".comment_commenter")!.textContent =
         comment.commenter.name;
-      commentEl.querySelector(".comment_main")!.textContent = comment.comment;
+      commentEl.querySelector(".comment_main .comment_content")!.textContent =
+        comment.comment;
 
       const commentActionsHeader = commentEl.querySelector(
         ".comment_header .comment_actions",
@@ -597,12 +598,12 @@ const _renderComments = (comments: Comment[]) => {
         commentHeaderEditedTime.style.display = "none";
       });
 
-      const commentFooterEditTag = commentEl.querySelector(
-        ".comment_footer .comment_edit_tag",
+      const commentEditTag = commentEl.querySelector(
+        ".comment_main .comment_edit_tag",
       ) as HTMLSpanElement;
 
       if (!comment.last_edited_time) {
-        commentFooterEditTag.style.display = "none";
+        commentEditTag.style.display = "none";
       }
 
       main.appendChild(commentEl);

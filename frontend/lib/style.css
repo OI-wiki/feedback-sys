@@ -289,22 +289,22 @@
 
     margin-top: 4px;
 
-    font-size: 14px;
-    line-height: 22px;
+    & .comment_content {
+      font-size: 14px;
+      line-height: 22px;
 
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    white-space: pre-wrap;
-    hyphens: auto;
-    word-break: break-word;
-  }
-
-  & .comment_footer {
-    font-size: 12px;
-
-    user-select: none;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      hyphens: auto;
+      word-break: break-word;
+    }
 
     & .comment_edit_tag {
+      font-size: 12px;
+
+      user-select: none;
+
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
