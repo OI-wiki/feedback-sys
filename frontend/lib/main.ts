@@ -573,6 +573,8 @@ const _renderComments = (comments: Comment[]) => {
         <div class="comment_main">
           <span class="comment_content"></span>
           <span class="comment_edit_tag">(已编辑)</span>
+          <button class="comment_actions_item comment_expand" data-action="expand">展开</button>
+          <button class="comment_actions_item comment_expand" data-action="fold">折叠</button>
         </div>
       `.trim();
       commentEl.querySelector(".comment_commenter")!.textContent =
@@ -865,6 +867,38 @@ const _renderComments = (comments: Comment[]) => {
     commentsEl.removeChild(commentsEl.firstChild);
   }
   commentsEl.appendChild(fragment);
+
+  for (const commentEl of commentsPanel.querySelectorAll<HTMLDivElement>(
+    ".comment",
+  )) {
+    const commentMain = commentEl.querySelector(
+      ".comment_main",
+    ) as HTMLDivElement;
+    const commentExpand = commentEl.querySelector(
+      `.comment_main .comment_expand[data-action="expand"]`,
+    ) as HTMLButtonElement;
+    const commentFold = commentEl.querySelector(
+      `.comment_main .comment_expand[data-action="fold"]`,
+    ) as HTMLButtonElement;
+
+    const offsetHeight = commentMain.offsetHeight;
+    if (commentMain.scrollHeight <= offsetHeight) {
+      commentExpand.style.display = "none";
+    }
+    commentFold.style.display = "none";
+
+    commentExpand.addEventListener("click", () => {
+      commentExpand.style.display = "none";
+      commentFold.style.display = "";
+      commentMain.style.maxHeight = "100%";
+      commentMain.style.maxHeight = commentMain.scrollHeight + "px";
+    });
+    commentFold.addEventListener("click", () => {
+      commentExpand.style.display = "";
+      commentFold.style.display = "none";
+      commentMain.style.maxHeight = `${offsetHeight}px`;
+    });
+  }
 };
 
 const _updateAvailableComments = async () => {
