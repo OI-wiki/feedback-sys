@@ -105,7 +105,7 @@ export type Commenter = {
 	oauth_provider: string;
 	oauth_user_id: string;
 	name: string;
-	avatar: string;
+	avatar_url: string;
 };
 
 export type GithubOrgMembershipResp = {

@@ -26,7 +26,7 @@ type Comment = {
     oauth_provider: "github";
     oauth_user_id: string;
     name: string | null;
-    avatar?: string;
+    avatar_url?: string;
   };
   comment: string;
   created_time: string;
@@ -565,7 +565,7 @@ const _renderComments = (comments: Comment[]) => {
       commentEl.innerHTML = `
         <div class="comment_side">
           <div class="comment_user_avatar">
-            <img src="${comment.commenter.avatar}" alt="user avatar"/>
+            <img src="${comment.commenter.avatar_url}" alt="user avatar"/>
           </div>
         </div>
         <div class="comment_base">
@@ -591,7 +591,7 @@ const _renderComments = (comments: Comment[]) => {
       commentEl.querySelector(".comment_main .comment_content")!.textContent =
         comment.comment;
 
-      if (!comment.commenter.avatar) {
+      if (!comment.commenter.avatar_url) {
         const userAvatar = commentEl.querySelector(
           ".comment_user_avatar",
         ) as HTMLDivElement;
