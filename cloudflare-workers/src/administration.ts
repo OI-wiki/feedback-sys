@@ -80,12 +80,17 @@ export async function sendCommentUpdateToTelegram(env: Env, req: PostComment, us
 		}
 	}
 
-	const message =
+	let message =
 		`💬 New paragraph comment on ` +
 		`[${escapeTelegramMarkdown(`${title}`)}](${escapeTelegramMarkdown(`https://oi-wiki.org${req.path}`)})\n` +
 		`> ${escapeTelegramMarkdown(offset)}\n` +
-		`by ${escapeTelegramMarkdown(username)}\n\n` +
-		`${escapeTelegramMarkdown(req.comment)}`;
+		`by ${escapeTelegramMarkdown(username)}\n\n`;
+
+	let comment = req.comment;
+	if (comment.length > 2048) {
+		comment = comment.substring(0, 2048) + '...';
+	}
+	message += escapeTelegramMarkdown(comment);
 
 	await Promise.all(env.TELEGRAM_CHAT_ID.split(',').map((chatId) => sendTelegramMessage(env.TELEGRAM_BOT_TOKEN, chatId, message)));
 }
