@@ -331,7 +331,10 @@
     background-color: var(--review-on-text-color);
   }
 
-  & .comment_actions_panel .comment_username {
+  & .comment_actions_panel .comment_actions_header {
+    display: flex;
+    justify-content: space-between;
+
     width: 100%;
 
     padding: 3px;
@@ -347,6 +350,10 @@
     font-size: 12px;
 
     user-select: none;
+
+    & .comment_actions_item[data-action="logout"] {
+      padding: 0 3px;
+    }
   }
 
   &
@@ -407,7 +414,7 @@
       color: var(--review-error-text-color);
     }
 
-    & .comment_actions_item {
+    & .comment_actions_item_btn {
       padding: 3px 7px;
 
       height: 28px;
@@ -421,7 +428,7 @@
 
       color: var(--review-text-color);
 
-      &.comment_actions_item_primary {
+      &.comment_actions_item_btn_primary {
         background-color: var(--review-primary-color);
       }
 

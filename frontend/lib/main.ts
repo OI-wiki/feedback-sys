@@ -467,20 +467,23 @@ const _renderComments = (comments: Comment[]) => {
       <div class="comments_group_main"></div>
       <div class="comments_group_footer">
         <div class="comment_actions_panel">
-          <div class="comment_username"></div>
+          <div class="comment_actions_header">
+            <span class="comment_username"></span>
+            <button class="comment_actions_item" data-action="logout">退出登录</button>
+          </div>
           <textarea required placeholder="写下你的评论..."  autocapitalize="sentences" autocomplete="on" spellcheck="true" autofocus="true" maxlength="65535"></textarea>
           <div class="comment_actions_footer">
             <span class="comment_actions_notification"></span>
             <div class="comment_actions comment_actions_login">
-              <button class="comment_actions_item comment_actions_item_primary" data-action="login">登录到 GitHub</button>
+              <button class="comment_actions_item comment_actions_item_btn comment_actions_item_btn_primary" data-action="login">登录到 GitHub</button>
             </div>
             <div class="comment_actions comment_actions_modify">
-              <button class="comment_actions_item" data-action="modify_cancel">取消</button>
-              <button class="comment_actions_item comment_actions_item_primary" data-action="modify_submit">修改</button>
+              <button class="comment_actions_item comment_actions_item_btn" data-action="modify_cancel">取消</button>
+              <button class="comment_actions_item comment_actions_item_btn comment_actions_item_btn_primary" data-action="modify_submit">修改</button>
             </div>
             <div class="comment_actions comment_actions_reply">
-              <button class="comment_actions_item" data-action="cancel">取消</button>
-              <button class="comment_actions_item comment_actions_item_primary" data-action="submit">提交</button>
+              <button class="comment_actions_item comment_actions_item_btn" data-action="cancel">取消</button>
+              <button class="comment_actions_item comment_actions_item_btn comment_actions_item_btn_primary" data-action="submit">提交</button>
             </div>
           </div>
         </div>
@@ -503,9 +506,14 @@ const _renderComments = (comments: Comment[]) => {
       ".comment_actions_login",
     ) as HTMLDivElement;
 
+    const commentActionsLogout = container.querySelector(
+      "button.comment_actions_item[data-action='logout']",
+    ) as HTMLButtonElement;
+
     const userInfo = _decodeJWT();
     if (!userInfo) {
       username.textContent = "登录到 GitHub 以发表评论";
+      commentActionsLogout.style.display = "none";
     } else {
       username.textContent = `作为 ${userInfo.name} 发表评论`;
       commentActionsLogin.style.display = "none";
@@ -558,8 +566,8 @@ const _renderComments = (comments: Comment[]) => {
           <span class="comment_time comment_created_time">发布于 ${dateTimeFormatter.format(new Date(comment.created_time))}</span>
           <span class="comment_time comment_edited_time">最后编辑于 ${comment.last_edited_time ? dateTimeFormatter.format(new Date(comment.last_edited_time)) : ""}</span>
           <div class="comment_actions">
-            <button data-action="modify">修改</button>
-            <button data-action="delete">删除</button>
+            <button class="comment_actions_item" data-action="modify">修改</button>
+            <button class="comment_actions_item" data-action="delete">删除</button>
           </div>
         </div>
         <div class="comment_main">
@@ -625,7 +633,7 @@ const _renderComments = (comments: Comment[]) => {
       main.appendChild(commentEl);
     }
 
-    for (const actions of container.querySelectorAll(".comment_actions")) {
+    for (const actions of container.querySelectorAll(".comment_actions_item")) {
       actions.addEventListener("click", (e) => {
         if (!(e.target instanceof HTMLButtonElement)) return;
         const target = e.target as HTMLButtonElement;
@@ -673,6 +681,11 @@ const _renderComments = (comments: Comment[]) => {
               return;
             }
             window.location.href = `https://github.com/login/oauth/authorize?client_id=${githubMeta.client_id}&state=${encodeURIComponent(JSON.stringify({ redirect: window.location.href }))}`;
+            break;
+          }
+          case "logout": {
+            _logout();
+            window.location.reload();
             break;
           }
           case "cancel": {
