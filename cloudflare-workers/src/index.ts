@@ -29,7 +29,7 @@ import { deleteComment, getComment, getUserOfComment, modifyComment, postComment
 import { setCommitHash, compareCommitHash, modifyComments, renameComments, sendCommentUpdateToTelegram } from './administration';
 import { matchCommentCache, purgeAllCommentCache, purgeCommentCache, putCommentCache } from './cache';
 import { signJWT } from './utils';
-import { getAccessToken, getUserInfo, getUserOrganizationMembership } from './oauth';
+import { getAccessToken, getUserInfo, getUserTeamMembership } from './oauth';
 import {
 	isAdmin,
 	isSameCommenter,
@@ -350,13 +350,21 @@ router.get('/oauth/callback', async (req, env, ctx) => {
 	}
 
 	const token = await getAccessToken(env, code);
-	const userInfoPromise = getUserInfo(token);
-	const membershipPromise = getUserOrganizationMembership(token, env.GITHUB_ORG);
-
-	const [userInfo, membership] = await Promise.all([userInfoPromise, membershipPromise]);
+	const userInfo = await getUserInfo(token);
+	const membership = await getUserTeamMembership(
+		token,
+		userInfo.login,
+		env.GITHUB_ORG_ADMINISTRATOR_TEAM.split('/')[0],
+		env.GITHUB_ORG_ADMINISTRATOR_TEAM.split('/')[1],
+	);
 
 	const jwt = await signJWT(
-		{ provider: 'github', id: userInfo.id + '', name: userInfo.name ?? userInfo.login, role: membership?.role } satisfies JWTPayload,
+		{
+			provider: 'github',
+			id: userInfo.id + '',
+			name: userInfo.name ?? userInfo.login,
+			isAdmin: membership?.state === 'active',
+		} satisfies JWTPayload,
 		env.OAUTH_JWT_SECRET,
 	);
 

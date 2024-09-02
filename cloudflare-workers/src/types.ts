@@ -107,12 +107,13 @@ export type Commenter = {
 };
 
 export type GithubOrgMembershipResp = {
-	role: 'admin' | 'member' | 'billing_manager';
+	role: 'member' | 'maintainer';
+	state: 'active' | 'pending';
 };
 
 export type JWTPayload = {
 	provider: string;
 	id: string;
 	name: string;
-	role?: GithubOrgMembershipResp['role'];
+	isAdmin?: boolean;
 };

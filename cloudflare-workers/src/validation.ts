@@ -91,5 +91,5 @@ export function isSameCommenter(commenter: Commenter | null, token: JWTPayload |
 }
 
 export function isAdmin(token: JWTPayload | null): boolean {
-	return token !== null && token.role === 'admin';
+	return token !== null && token.isAdmin === true;
 }
