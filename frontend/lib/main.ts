@@ -96,6 +96,11 @@ const _decodeJWT = () => {
   return JSON.parse(payload) as JWTPayload;
 };
 
+const _logout = () => {
+  document.cookie =
+    "oauth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure";
+};
+
 const _registerDialog = ({
   id,
   content,
@@ -464,17 +469,19 @@ const _renderComments = (comments: Comment[]) => {
         <div class="comment_actions_panel">
           <div class="comment_username"></div>
           <textarea required placeholder="写下你的评论..."  autocapitalize="sentences" autocomplete="on" spellcheck="true" autofocus="true" maxlength="65535"></textarea>
-          <div class="comment_actions comment_actions_login">
-            <button class="comment_actions_item comment_actions_item_primary" data-action="login">登录到 GitHub</button>
-          </div>
-          <div class="comment_actions comment_actions_modify">
-            <button class="comment_actions_item" data-action="modify_cancel">取消</button>
-            <button class="comment_actions_item comment_actions_item_primary" data-action="modify_submit">修改</button>
-          </div>
-          <div class="comment_actions comment_actions_reply">
+          <div class="comment_actions_footer">
             <span class="comment_actions_notification"></span>
-            <button class="comment_actions_item" data-action="cancel">取消</button>
-            <button class="comment_actions_item comment_actions_item_primary" data-action="submit">提交</button>
+            <div class="comment_actions comment_actions_login">
+              <button class="comment_actions_item comment_actions_item_primary" data-action="login">登录到 GitHub</button>
+            </div>
+            <div class="comment_actions comment_actions_modify">
+              <button class="comment_actions_item" data-action="modify_cancel">取消</button>
+              <button class="comment_actions_item comment_actions_item_primary" data-action="modify_submit">修改</button>
+            </div>
+            <div class="comment_actions comment_actions_reply">
+              <button class="comment_actions_item" data-action="cancel">取消</button>
+              <button class="comment_actions_item comment_actions_item_primary" data-action="submit">提交</button>
+            </div>
           </div>
         </div>
       </div>
@@ -631,6 +638,34 @@ const _renderComments = (comments: Comment[]) => {
           ".comment_actions_notification",
         ) as HTMLSpanElement;
 
+        const _handleError = async (e: any) => {
+          console.error(e);
+
+          if (e instanceof Error) {
+            notification.textContent = e.message;
+          } else if (e instanceof Response) {
+            if (e.status === 401) {
+              notification.textContent = "身份验证失效，请重新登录";
+              _logout();
+              return;
+            }
+            if (
+              e.headers.get("content-type")?.includes("application/json") ===
+              true
+            ) {
+              const json = (await e.json()) as {
+                status: number;
+                error: string;
+              };
+              notification.textContent = json.error;
+            } else {
+              notification.textContent = `未知接口错误：${e.status}(${e.statusText})`;
+            }
+          } else {
+            notification.textContent = "提交失败，请稍后再试";
+          }
+        };
+
         switch (target?.dataset.action) {
           case "login": {
             if (!githubMeta) {
@@ -668,29 +703,7 @@ const _renderComments = (comments: Comment[]) => {
                 textarea.value = "";
                 notification.textContent = "";
               })
-              .catch(async (e) => {
-                console.error(e);
-
-                if (e instanceof Error) {
-                  notification.textContent = e.message;
-                } else if (e instanceof Response) {
-                  if (
-                    e.headers
-                      .get("content-type")
-                      ?.includes("application/json") === true
-                  ) {
-                    const json = (await e.json()) as {
-                      status: number;
-                      error: string;
-                    };
-                    notification.textContent = json.error;
-                  } else {
-                    notification.textContent = `未知接口错误：${e.status}(${e.statusText})`;
-                  }
-                } else {
-                  notification.textContent = "提交失败，请稍后再试";
-                }
-              })
+              .catch(_handleError)
               .finally(() => {
                 _openCommentsPanel().then(() => {
                   const newNotification = commentsPanel.querySelector(
@@ -761,11 +774,18 @@ const _renderComments = (comments: Comment[]) => {
                 textarea.value = "";
                 notification.textContent = "";
               })
+              .catch(_handleError)
               .finally(() => {
                 _openCommentsPanel().then(() => {
+                  const newNotification = commentsPanel.querySelector(
+                    ".review_selected .comment_actions_notification",
+                  );
                   const newTextArea = commentsPanel.querySelector(
                     ".review_selected .comment_actions_panel textarea",
                   ) as HTMLTextAreaElement;
+                  if (newNotification) {
+                    newNotification.textContent = notification.textContent;
+                  }
                   if (newTextArea) {
                     newTextArea.value = textarea.value;
                   }
@@ -780,30 +800,38 @@ const _renderComments = (comments: Comment[]) => {
               target.parentElement?.parentElement?.parentElement?.dataset?.id;
             if (id == undefined) return;
 
-            _deleteComment({ id: parseInt(id) }).finally(() => {
-              _openCommentsPanel().then(() => {
-                const newNotification = commentsPanel.querySelector(
-                  ".review_selected .comment_actions_notification",
-                );
-                const newTextArea = commentsPanel.querySelector(
-                  ".review_selected .comment_actions_panel textarea",
-                ) as HTMLTextAreaElement;
-                if (newNotification) {
-                  newNotification.textContent = notification.textContent;
-                }
-                if (newTextArea) {
-                  newTextArea.value = textarea.value;
-                }
+            _deleteComment({ id: parseInt(id) })
+              .catch(_handleError)
+              .finally(() => {
+                _openCommentsPanel().then(() => {
+                  const newNotification = commentsPanel.querySelector(
+                    ".review_selected .comment_actions_notification",
+                  );
+                  const newTextArea = commentsPanel.querySelector(
+                    ".review_selected .comment_actions_panel textarea",
+                  ) as HTMLTextAreaElement;
+                  if (newNotification) {
+                    newNotification.textContent = notification.textContent;
+                  }
+                  if (newTextArea) {
+                    newTextArea.value = textarea.value;
+                  }
+                });
               });
-            });
 
             _openCommentsPanel().then(() => {
+              const newNotification = commentsPanel.querySelector(
+                ".review_selected .comment_actions_notification",
+              );
               const newDeleteButton = commentsPanel.querySelector(
                 `.comment[data-id="${id}"] button[data-action="delete"]`,
               ) as HTMLButtonElement;
               const newModifyButton = commentsPanel.querySelector(
                 `.comment[data-id="${id}"] button[data-action="modify"]`,
               ) as HTMLButtonElement;
+              if (newNotification) {
+                newNotification.textContent = notification.textContent;
+              }
               if (newDeleteButton) {
                 newDeleteButton.disabled = true;
               }
