@@ -346,17 +346,13 @@
     & .comment_expand {
       bottom: 0;
       left: 50%;
-      transform: translateX(-50%);
+      transform: translateX(calc(-50% - 16px));
 
       padding: 4px 8px;
 
-      width: 100%;
+      width: calc(100% + 32px);
 
       color: var(--review-secondary-text-color);
-
-      &:hover {
-        background-color: var(--review-variant-bg-color);
-      }
 
       &[data-action="expand"] {
         position: absolute;
