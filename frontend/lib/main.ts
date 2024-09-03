@@ -570,27 +570,31 @@ const _renderComments = (comments: Comment[]) => {
       }
       commentEl.dataset.id = comment.id.toString();
       commentEl.innerHTML = `
-        <div class="comment_side">
-          <div class="comment_user_avatar">
-            <img src="${comment.commenter.avatar_url}" alt="user avatar"/>
-          </div>
-        </div>
-        <div class="comment_base">
-          <div class="comment_header">
-            <span class="comment_commenter"></span>
-            <span class="comment_time comment_created_time">发布于 ${dateTimeFormatter.format(new Date(comment.created_time))}</span>
-            <span class="comment_time comment_edited_time">最后编辑于 ${comment.last_edited_time ? dateTimeFormatter.format(new Date(comment.last_edited_time)) : ""}</span>
-            <div class="comment_actions">
-              <button class="comment_actions_item" data-action="modify">修改</button>
-              <button class="comment_actions_item" data-action="delete">删除</button>
+        <div class="comment_container">
+          <div class="comment_side">
+            <div class="comment_user_avatar">
+              <img src="${comment.commenter.avatar_url}" alt="user avatar"/>
             </div>
           </div>
-          <div class="comment_main">
-            <span class="comment_content"></span>
-            <span class="comment_edit_tag">(已编辑)</span>
-            <button class="comment_actions_item comment_expand" data-action="expand">展开</button>
-            <button class="comment_actions_item comment_expand" data-action="fold">折叠</button>
+          <div class="comment_base">
+            <div class="comment_header">
+              <span class="comment_commenter"></span>
+              <span class="comment_time comment_created_time">发布于 ${dateTimeFormatter.format(new Date(comment.created_time))}</span>
+              <span class="comment_time comment_edited_time">最后编辑于 ${comment.last_edited_time ? dateTimeFormatter.format(new Date(comment.last_edited_time)) : ""}</span>
+              <div class="comment_actions">
+                <button class="comment_actions_item" data-action="modify">修改</button>
+                <button class="comment_actions_item" data-action="delete">删除</button>
+              </div>
+            </div>
+            <div class="comment_main">
+              <span class="comment_content"></span>
+              <span class="comment_edit_tag">(已编辑)</span>
+            </div>
           </div>
+        </div>
+        <div class="comment_tailing">
+          <button class="comment_actions_item comment_expand" data-action="expand">展开</button>
+          <button class="comment_actions_item comment_expand" data-action="fold">折叠</button>
         </div>
       `.trim();
       commentEl.querySelector(".comment_commenter")!.textContent =
@@ -905,10 +909,10 @@ const _renderComments = (comments: Comment[]) => {
       ".comment_main",
     ) as HTMLDivElement;
     const commentExpand = commentEl.querySelector(
-      `.comment_main .comment_expand[data-action="expand"]`,
+      `.comment_tailing .comment_expand[data-action="expand"]`,
     ) as HTMLButtonElement;
     const commentFold = commentEl.querySelector(
-      `.comment_main .comment_expand[data-action="fold"]`,
+      `.comment_tailing .comment_expand[data-action="fold"]`,
     ) as HTMLButtonElement;
 
     const offsetHeight = commentMain.offsetHeight;
