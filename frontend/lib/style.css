@@ -263,10 +263,44 @@
   }
 
   & .comment {
+    position: relative;
+  }
+
+  & .comment_container {
     display: grid;
     grid-template-columns: 32px 1fr;
     align-items: start;
     gap: 12px;
+  }
+
+  & .comment_tailing .comment_expand {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+
+    padding: 4px 8px;
+
+    width: 100%;
+
+    color: var(--review-secondary-text-color);
+
+    &[data-action="expand"] {
+      position: absolute;
+
+      padding-top: 70%;
+
+      background: linear-gradient(
+        to top,
+        var(--review-on-text-color) 0%,
+        transparent 100%
+      );
+    }
+
+    &[data-action="fold"] {
+      position: relative;
+
+      margin-top: 8px;
+    }
   }
 
   & .comment_user_avatar {
@@ -341,36 +375,6 @@
       white-space: nowrap;
 
       color: var(--review-secondary-text-color);
-    }
-
-    & .comment_expand {
-      bottom: 0;
-      left: 50%;
-      transform: translateX(calc(-50% - 16px));
-
-      padding: 4px 8px;
-
-      width: calc(100% + 32px);
-
-      color: var(--review-secondary-text-color);
-
-      &[data-action="expand"] {
-        position: absolute;
-
-        padding-top: 70%;
-
-        background: linear-gradient(
-          to top,
-          var(--review-on-text-color) 0%,
-          transparent 100%
-        );
-      }
-
-      &[data-action="fold"] {
-        position: relative;
-
-        margin-top: 8px;
-      }
     }
   }
 
