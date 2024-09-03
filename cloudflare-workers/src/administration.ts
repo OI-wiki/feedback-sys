@@ -43,7 +43,7 @@ export async function renameComments(env: Env, oldPath: string, newPath: string)
 
 export async function modifyComments(env: Env, path: string, diff: ModifiedCommentBody['diff']) {
 	if (!(await isPathExists(env, path))) {
-		throw new Error('The path you want to modify does not exist');
+		return;
 	}
 
 	const offsets: Offset[] = (await getOffsets(env, path)).sort((a, b) => a.start - b.start);
