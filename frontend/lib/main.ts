@@ -551,10 +551,6 @@ const _renderComments = (comments: Comment[]) => {
         behavior: "smooth",
         block: "center",
       });
-      const textarea = container.querySelector(
-        ".comment_actions_panel textarea",
-      ) as HTMLTextAreaElement;
-      textarea.focus();
     });
 
     const commentsGroup = group[key].sort(
