@@ -366,11 +366,14 @@ router.get('/oauth/callback', async (req, env, ctx) => {
 
 	await registerUser(env, userInfo.name ?? userInfo.login, 'github', userInfo.id + '', userInfo.avatar_url);
 
+	const redirectUrl = new URL(state.redirect);
+	redirectUrl.searchParams.append('oauth_token', jwt);
+
 	return new Response(null, {
 		status: 302,
 		headers: {
 			// 这样设计而不是 Set-Cookie 是因为跨站 Set-Cookie 不好做
-			Location: `${state.redirect}?oauth_token=${jwt}`,
+			Location: redirectUrl.toString(),
 		},
 	});
 });
