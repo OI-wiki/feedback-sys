@@ -497,12 +497,16 @@ const _renderComments = (comments: Comment[]) => {
       </div>
     `.trim();
 
+    const _updateTextareaHeight = (textarea: HTMLTextAreaElement) => {
+      textarea.style.height = "5px";
+      textarea.style.height = textarea.scrollHeight + "px";
+    };
+
     container
       .querySelector(".comment_actions_panel textarea")!
       .addEventListener("input", (e) => {
         const element = e.currentTarget as HTMLTextAreaElement;
-        element.style.height = "5px";
-        element.style.height = element.scrollHeight + "px";
+        _updateTextareaHeight(element);
       });
 
     const username = container.querySelector(
@@ -721,6 +725,7 @@ const _renderComments = (comments: Comment[]) => {
             textarea.disabled = false;
             textarea.value = "";
             notification.textContent = "";
+            _updateTextareaHeight(textarea);
             break;
           }
           case "submit": {
@@ -795,6 +800,13 @@ const _renderComments = (comments: Comment[]) => {
             textarea.value =
               commentsCache?.find((it) => it.id === parseInt(id))?.comment ??
               "";
+
+            const footer = container.querySelector(
+              ".comments_group_footer",
+            ) as HTMLDivElement;
+            footer.style.display = "block";
+            _updateTextareaHeight(textarea);
+            footer.style.display = "";
             break;
           }
           case "modify_cancel": {
@@ -808,6 +820,8 @@ const _renderComments = (comments: Comment[]) => {
             textarea.disabled = false;
             textarea.value = "";
             notification.textContent = "";
+
+            _updateTextareaHeight(textarea);
             break;
           }
           case "modify_submit": {
