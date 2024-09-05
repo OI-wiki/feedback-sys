@@ -2,6 +2,8 @@
 
 OI Wiki Feedback System 提供了一套完整的前后端系统，可以为网站提供段落级别的划词评论功能，该系统目前已经部署至 OI Wiki 主站。
 
+<img width="979" alt="image" src="https://github.com/user-attachments/assets/424d2cd4-09b3-4d86-a994-9869ec7aa06a">
+
 ## 项目架构
 
 - [/python-markdown-extension](/python-markdown-extension/) Python Markdown 编译器插件，解析源文档 Markdown 段落和编译后 HTML 元素的对应关系，并将关系存储在后者中。
