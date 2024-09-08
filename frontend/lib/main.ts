@@ -134,7 +134,7 @@ const _registerDialog = ({
     </${tag}>
     `.trim(),
   );
-  dialog = document.querySelector(
+  dialog = parent.querySelector(
     isClass ? `.${idOrClass}` : `#${idOrClass}`,
   )! as HTMLElement;
 
@@ -180,14 +180,8 @@ const _unselectOffsetParagraph = () => {
   selectedOffset = null;
 };
 
-const _openContextMenu = ({ el }: { el: HTMLElement }) => {
-  const contextMenu = el.querySelector(`.review-context-menu`) as
-    | HTMLDivElement
-    | undefined;
-  if (contextMenu) {
-    contextMenu.style.display = "";
-    return;
-  }
+const _createContextMenu = ({ el }: { el: HTMLElement }) => {
+  if (el.querySelector(`.review-context-menu`)) return;
   _registerDialog({
     idOrClass: "review-context-menu",
     content: `
@@ -217,17 +211,25 @@ const _openContextMenu = ({ el }: { el: HTMLElement }) => {
       innerEl.addEventListener("mouseleave", () => {
         el.classList.remove("review_focused");
       });
+      innerEl.style.display = "none";
     },
   });
+};
+
+const _openContextMenu = ({ el }: { el: HTMLElement }) => {
+  const contextMenu = el.querySelector(`.review-context-menu`) as
+    | HTMLDivElement
+    | undefined;
+  if (!contextMenu) return;
+  contextMenu.style.display = "";
 };
 
 const _closeContextMenu = ({ el }: { el: HTMLElement }) => {
   const contextMenu = el.querySelector(
     `.review-context-menu:not([style*="display: none"])`,
   ) as HTMLDivElement | undefined;
-  if (contextMenu) {
-    contextMenu.style.display = "none";
-  }
+  if (!contextMenu) return;
+  contextMenu.style.display = "none";
 };
 
 const _openCommentsPanel = async () => {
@@ -1031,12 +1033,7 @@ export function setupReview(
       });
     });
     // pre render context menu
-    _openContextMenu({
-      el: offset,
-    });
-    _closeContextMenu({
-      el: offset,
-    });
+    _createContextMenu({ el: offset });
   }
 
   // clear cache
