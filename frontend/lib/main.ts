@@ -105,34 +105,39 @@ const _logout = () => {
 };
 
 const _registerDialog = ({
-  id,
+  idOrClass,
   content,
   actions = new Map<string, (el: HTMLElement) => void>(),
   parent = document.body,
   insertPosition = "afterend",
   tag = "div",
+  isClass = false,
   initialize = () => {},
 }: {
-  id: string;
+  idOrClass: string;
   content: string;
   parent?: HTMLElement;
   insertPosition?: InsertPosition;
   actions?: Map<string, (el: HTMLElement) => void>;
   tag?: keyof HTMLElementTagNameMap;
+  verifyId?: boolean;
+  isClass?: boolean;
   initialize?: (el: HTMLElement) => void;
 }): HTMLElement => {
-  let dialog = document.querySelector<HTMLElement>(`#${id}`);
-  if (dialog) return dialog;
+  let dialog = document.querySelector<HTMLElement>(`#${idOrClass}`);
+  if (!isClass && dialog) return dialog;
 
   parent.insertAdjacentHTML(
     insertPosition,
     `
-    <${tag} id="${id}">
+    <${tag} ${isClass ? `class="${idOrClass}"` : `id="${idOrClass}"`}>
       ${content.trim()}
     </${tag}>
     `.trim(),
   );
-  dialog = document.querySelector(`#${id}`)! as HTMLElement;
+  dialog = document.querySelector(
+    isClass ? `.${idOrClass}` : `#${idOrClass}`,
+  )! as HTMLElement;
 
   initialize(dialog);
 
@@ -177,8 +182,16 @@ const _unselectOffsetParagraph = () => {
 };
 
 const _openContextMenu = ({ el }: { el: HTMLElement }) => {
+  const contextMenu = el.querySelector(`.review-context-menu`) as
+    | HTMLDivElement
+    | undefined;
+  if (contextMenu) {
+    contextMenu.style.display = "";
+    console.log(contextMenu, "display set to '' openContextMenu");
+    return;
+  }
   _registerDialog({
-    id: "review-context-menu",
+    idOrClass: "review-context-menu",
     content: `
     <button data-action="comment">
       ${iconAddComment}
@@ -198,6 +211,7 @@ const _openContextMenu = ({ el }: { el: HTMLElement }) => {
         },
       ],
     ]),
+    isClass: true,
     initialize: (innerEl) => {
       innerEl.addEventListener("mouseenter", () => {
         el.classList.add("review_focused");
@@ -209,9 +223,14 @@ const _openContextMenu = ({ el }: { el: HTMLElement }) => {
   });
 };
 
-const _closeContextMenu = () => {
-  const contextMenu = document.querySelector("#review-context-menu")!;
-  contextMenu.remove();
+const _closeContextMenu = ({ el }: { el: HTMLElement }) => {
+  const contextMenu = el.querySelector(
+    `.review-context-menu:not([style*="display: none"])`,
+  ) as HTMLDivElement | undefined;
+  if (contextMenu) {
+    contextMenu.style.display = "none";
+    console.log(contextMenu, "display set to none closeContextMenu");
+  }
 };
 
 const _openCommentsPanel = async () => {
@@ -1009,8 +1028,17 @@ export function setupReview(
         el: e.currentTarget as HTMLElement,
       });
     });
-    offset.addEventListener("mouseleave", () => {
-      _closeContextMenu();
+    offset.addEventListener("mouseleave", (e) => {
+      _closeContextMenu({
+        el: e.currentTarget as HTMLElement,
+      });
+    });
+    // pre render context menu
+    _openContextMenu({
+      el: offset,
+    });
+    _closeContextMenu({
+      el: offset,
     });
   }
 
@@ -1031,7 +1059,7 @@ export function setupReview(
   });
 
   commentsButton = _registerDialog({
-    id: "review-comments-button",
+    idOrClass: "review-comments-button",
     content: `
     <button data-action="open">
       ${iconComment}
@@ -1041,7 +1069,7 @@ export function setupReview(
   });
 
   commentsPanel = _registerDialog({
-    id: "review-comments-panel",
+    idOrClass: "review-comments-panel",
     content: `
     <div class="panel_header">
       <span>本页评论</span>
