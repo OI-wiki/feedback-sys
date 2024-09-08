@@ -1,6 +1,6 @@
 [project]
 name = "python_markdown_document_offsets_injection_extension"
-version = "0.5.1"
+version = "0.5.2"
 description = "A Python-Markdown compiler plugin that put markdown words offset to the output HTML."
 authors = [{ name = "HikariLan", email = "hikarilan@minecraft.kim" }]
 license = { text = "Apache-2.0" }
