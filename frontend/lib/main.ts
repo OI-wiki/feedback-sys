@@ -109,7 +109,7 @@ const _registerDialog = ({
   content,
   actions = new Map<string, (el: HTMLElement) => void>(),
   parent = document.body,
-  insertPosition = "afterend",
+  insertPosition = "beforeend",
   tag = "div",
   isClass = false,
   initialize = () => {},
@@ -187,12 +187,10 @@ const _createContextMenu = ({ el }: { el: HTMLElement }) => {
     </button>
     `,
     parent: el,
-    insertPosition: "beforeend",
     actions: new Map([
       [
         "comment",
-        (innerEl) => {
-          innerEl.parentElement?.remove();
+        () => {
           _selectOffsetParagraph({
             el,
             focusReply: true,
@@ -1082,7 +1080,6 @@ export function setupReview(
     </div>
     <div class="panel_main"></div>
     `,
-    insertPosition: "beforeend",
     actions: new Map([["close", () => _closeCommentsPanel()]]),
   });
 
