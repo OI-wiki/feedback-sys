@@ -217,7 +217,10 @@ const _openContextMenu = ({ el }: { el: HTMLElement }) => {
   const contextMenu = el.querySelector(`.review-context-menu`) as
     | HTMLDivElement
     | undefined;
-  if (!contextMenu) return;
+  if (!contextMenu) {
+    console.error("openContextMenu called but contextMenu not found");
+    return;
+  }
   contextMenu.style.display = "";
 };
 
@@ -225,7 +228,10 @@ const _closeContextMenu = ({ el }: { el: HTMLElement }) => {
   const contextMenu = el.querySelector(
     `.review-context-menu:not([style*="display: none"])`,
   ) as HTMLDivElement | undefined;
-  if (!contextMenu) return;
+  if (!contextMenu) {
+    console.error("closeContextMenu called but contextMenu not found");
+    return;
+  }
   contextMenu.style.display = "none";
 };
 
