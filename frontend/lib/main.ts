@@ -120,7 +120,6 @@ const _registerDialog = ({
   insertPosition?: InsertPosition;
   actions?: Map<string, (el: HTMLElement) => void>;
   tag?: keyof HTMLElementTagNameMap;
-  verifyId?: boolean;
   isClass?: boolean;
   initialize?: (el: HTMLElement) => void;
 }): HTMLElement => {
@@ -187,7 +186,6 @@ const _openContextMenu = ({ el }: { el: HTMLElement }) => {
     | undefined;
   if (contextMenu) {
     contextMenu.style.display = "";
-    console.log(contextMenu, "display set to '' openContextMenu");
     return;
   }
   _registerDialog({
@@ -229,7 +227,6 @@ const _closeContextMenu = ({ el }: { el: HTMLElement }) => {
   ) as HTMLDivElement | undefined;
   if (contextMenu) {
     contextMenu.style.display = "none";
-    console.log(contextMenu, "display set to none closeContextMenu");
   }
 };
 
