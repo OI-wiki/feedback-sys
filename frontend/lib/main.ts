@@ -157,22 +157,19 @@ const _selectOffsetParagraph = ({
   focusReply?: boolean;
 }) => {
   if (selectedOffset !== el) {
-    selectedOffset?.classList.remove("review_selected");
+    delete selectedOffset?.dataset.reviewSelected;
     selectedOffset = el;
   }
 
-  if (
-    selectedOffset?.classList.contains("review_has_comments") === true ||
-    focusReply
-  ) {
-    selectedOffset.classList.remove("review_focused");
-    selectedOffset.classList.add("review_selected");
+  if (selectedOffset?.dataset.reviewHasComments || focusReply) {
+    delete selectedOffset.dataset.reviewFocused;
+    selectedOffset.dataset.reviewSelected = "true";
     _openCommentsPanel();
   }
 };
 
 const _unselectOffsetParagraph = () => {
-  selectedOffset?.classList.remove("review_selected");
+  delete selectedOffset?.dataset.reviewSelected;
   selectedOffset = null;
 };
 
@@ -200,10 +197,10 @@ const _openContextMenu = ({ el }: { el: HTMLElement }) => {
     ]),
     initialize: (innerEl) => {
       innerEl.addEventListener("mouseenter", () => {
-        el.classList.add("review_focused");
+        el.dataset.reviewFocused = "true";
       });
       innerEl.addEventListener("mouseleave", () => {
-        el.classList.remove("review_focused");
+        delete el.dataset.reviewFocused;
       });
     },
   });
@@ -248,9 +245,11 @@ const _openCommentsPanel = async () => {
   _renderComments(comments);
   let selectedCommentsGroup = document.querySelector(
     `#review-comments-panel .comments_group[data-original-document-start="${selectedOffset?.dataset.originalDocumentStart}"][data-original-document-end="${selectedOffset?.dataset.originalDocumentEnd}"]`,
-  );
+  ) as HTMLElement;
 
-  selectedCommentsGroup?.classList.add("review_selected");
+  if (selectedCommentsGroup) {
+    selectedCommentsGroup.dataset.reviewSelected = "true";
+  }
   selectedCommentsGroup?.scrollIntoView({
     behavior: "smooth",
     block: "start",
@@ -463,7 +462,7 @@ const _renderComments = (comments: Comment[]) => {
     container.dataset.originalDocumentEnd = offsets[1];
 
     const paragraph = document.querySelector<HTMLDivElement>(
-      `.review_enabled[data-original-document-start="${container.dataset.originalDocumentStart}"][data-original-document-end="${container.dataset.originalDocumentEnd}"]`,
+      `[data-review-enabled][data-original-document-start="${container.dataset.originalDocumentStart}"][data-original-document-end="${container.dataset.originalDocumentEnd}"]`,
     );
     const content = paragraph?.textContent ?? "";
 
@@ -537,20 +536,24 @@ const _renderComments = (comments: Comment[]) => {
     commentActionsModify.style.display = "none";
 
     container.addEventListener("mouseenter", () => {
-      paragraph?.classList.add("review_focused");
+      if (paragraph) {
+        paragraph.dataset.reviewFocused = "true";
+      }
     });
     container.addEventListener("mouseleave", () => {
-      paragraph?.classList.remove("review_focused");
+      delete paragraph?.dataset.reviewFocused;
     });
     container.addEventListener("click", (e) => {
       e.stopPropagation();
-      selectedOffset?.classList.remove("review_selected");
-      paragraph?.classList.remove("review_focused");
-      paragraph?.classList.add("review_selected");
-      document
-        .querySelector(".comments_group.review_selected")
-        ?.classList.remove("review_selected");
-      container.classList.add("review_selected");
+      delete selectedOffset?.dataset.reviewSelected;
+      delete paragraph?.dataset.reviewFocused;
+      delete paragraph?.dataset.reviewSelected;
+      delete (
+        document.querySelector(".comments_group[data-review-selected]") as
+          | HTMLElement
+          | undefined
+      )?.dataset.reviewSelected;
+      container.dataset.reviewSelected = "true";
       selectedOffset = paragraph;
       selectedOffset?.scrollIntoView({
         behavior: "smooth",
@@ -754,10 +757,10 @@ const _renderComments = (comments: Comment[]) => {
               .finally(() => {
                 _openCommentsPanel().then(() => {
                   const newNotification = commentsPanel.querySelector(
-                    ".review_selected .comment_actions_notification",
+                    "[data-review-selected] .comment_actions_notification",
                   );
                   const newTextArea = commentsPanel.querySelector(
-                    ".review_selected .comment_actions_panel textarea",
+                    "[data-review-selected] .comment_actions_panel textarea",
                   ) as HTMLTextAreaElement;
                   if (newNotification) {
                     newNotification.textContent = notification.textContent;
@@ -770,7 +773,7 @@ const _renderComments = (comments: Comment[]) => {
 
             _openCommentsPanel().then(() => {
               const newSubmitButton = commentsPanel.querySelector(
-                ".review_selected button[data-action='submit']",
+                "[data-review-selected] button[data-action='submit']",
               ) as HTMLButtonElement;
               if (newSubmitButton) {
                 newSubmitButton.disabled = true;
@@ -837,10 +840,10 @@ const _renderComments = (comments: Comment[]) => {
               .finally(() => {
                 _openCommentsPanel().then(() => {
                   const newNotification = commentsPanel.querySelector(
-                    ".review_selected .comment_actions_notification",
+                    "[data-review-selected] .comment_actions_notification",
                   );
                   const newTextArea = commentsPanel.querySelector(
-                    ".review_selected .comment_actions_panel textarea",
+                    "[data-review-selected] .comment_actions_panel textarea",
                   ) as HTMLTextAreaElement;
                   if (newNotification) {
                     newNotification.textContent = notification.textContent;
@@ -868,10 +871,10 @@ const _renderComments = (comments: Comment[]) => {
               .finally(() => {
                 _openCommentsPanel().then(() => {
                   const newNotification = commentsPanel.querySelector(
-                    ".review_selected .comment_actions_notification",
+                    "[data-review-selected] .comment_actions_notification",
                   );
                   const newTextArea = commentsPanel.querySelector(
-                    ".review_selected .comment_actions_panel textarea",
+                    "[data-review-selected] .comment_actions_panel textarea",
                   ) as HTMLTextAreaElement;
                   if (newNotification) {
                     newNotification.textContent = notification.textContent;
@@ -884,7 +887,7 @@ const _renderComments = (comments: Comment[]) => {
 
             _openCommentsPanel().then(() => {
               const newNotification = commentsPanel.querySelector(
-                ".review_selected .comment_actions_notification",
+                "[data-review-selected] .comment_actions_notification",
               );
               const newDeleteButton = commentsPanel.querySelector(
                 `.comment[data-id="${id}"] button[data-action="delete"]`,
@@ -952,14 +955,14 @@ const _renderComments = (comments: Comment[]) => {
 const _updateAvailableComments = async () => {
   const offsets = Array.from(
     document.querySelectorAll<HTMLElement>(
-      ".review_enabled[data-original-document-start][data-original-document-end]",
+      "[data-review-enabled][data-original-document-start][data-original-document-end]",
     ),
   );
 
   await _fetchComments();
 
   for (let offset of offsets) {
-    offset.classList.remove("review_has_comments");
+    delete offset.dataset.reviewHasComments;
     if (
       commentsCache!.find(
         (it) =>
@@ -968,7 +971,7 @@ const _updateAvailableComments = async () => {
           it.offset.end === parseInt(offset!.dataset.originalDocumentEnd!),
       )
     ) {
-      offset.classList.add("review_has_comments");
+      offset.dataset.reviewHasComments = "true";
     }
   }
 };
@@ -997,7 +1000,7 @@ export function setupReview(
   }
 
   for (let offset of offsets) {
-    offset.classList.add("review_enabled");
+    offset.dataset.reviewEnabled = "true";
     offset.addEventListener("click", (e) => {
       e.stopPropagation(); // Prevent bubble so that the document click event won't be triggered
       _selectOffsetParagraph({

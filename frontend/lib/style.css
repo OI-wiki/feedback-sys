@@ -1,7 +1,7 @@
 @charset "UTF-8";
 
 @custom-selector :--review
-  .review_enabled[data-original-document-start][data-original-document-end];
+  [data-review-enabled][data-original-document-start][data-original-document-end];
 @custom-media --mobile (width <= 768px);
 
 :root {
@@ -46,16 +46,16 @@
 }
 
 :--review {
-  &.review_has_comments {
+  &[data-review-has-comments] {
     text-decoration: underline;
     text-decoration-color: var(--review-secondary-color);
   }
 
-  &.review_focused {
+  &[data-review-focused] {
     background-color: var(--review-variant-color);
   }
 
-  &.review_selected {
+  &[data-review-selected] {
     text-decoration: underline;
     text-decoration-color: var(--review-secondary-color);
     background-color: var(--review-variant-color);
@@ -212,7 +212,7 @@
     border-radius: 6px;
     box-shadow: 0 8px 16px rgba(31, 35, 41, 0.1);
 
-    &.review_selected::before {
+    &[data-review-selected]::before {
       content: "";
 
       position: absolute;
@@ -225,7 +225,7 @@
       border-top-right-radius: 6px;
     }
 
-    &:not(.review_selected) .comments_group_footer {
+    &:not([data-review-selected]) .comments_group_footer {
       display: none;
     }
   }
