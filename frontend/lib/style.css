@@ -66,11 +66,11 @@
   cursor: pointer;
 }
 
-*:has(> #review-context-menu) {
+*:has(> .review-context-menu) {
   position: relative;
 }
 
-#review-context-menu {
+.review-context-menu {
   display: flex;
   justify-content: center;
   align-items: center;
