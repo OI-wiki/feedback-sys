@@ -9,7 +9,7 @@
     "index.d.ts"
   ],
   "repository": {
-    "url": "https://github.com/OI-wiki/feedback-sys"
+    "url": "git+https://github.com/OI-wiki/feedback-sys.git"
   },
   "main": "./dist/oiwiki-feedback-sys-frontend.umd.cjs",
   "module": "./dist/oiwiki-feedback-sys-frontend.js",
