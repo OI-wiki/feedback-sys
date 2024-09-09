@@ -123,9 +123,9 @@ router.post('/comment/:path', async (req, env, ctx) => {
 		comment: body.comment,
 	};
 
-	await postComment(env, data);
+	const commentId = await postComment(env, data);
 
-	ctx.waitUntil(sendCommentUpdateToTelegram(env, data, token.name));
+	ctx.waitUntil(sendCommentUpdateToTelegram(env, data, token.name, commentId));
 
 	const cache = caches.default;
 	ctx.waitUntil(purgeCommentCache(env, cache, new URL(req.url).origin, params.path));
