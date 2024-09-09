@@ -3,6 +3,9 @@ import iconAddComment from "iconify/add-comment-outline-rounded";
 import iconComment from "iconify/comment-outline-rounded";
 import iconClose from "iconify/close";
 import iconDefaultAvatar from "iconify/account-circle";
+import iconShare from "iconify/share";
+import iconEdit from "iconify/edit";
+import iconDelete from "iconify/delete";
 
 const groupBy = function <K extends string, T>(arr: T[], func: (el: T) => K) {
   return arr.reduce(
@@ -647,9 +650,9 @@ const _renderComments = (comments: Comment[]) => {
               <span class="comment_time comment_created_time">发布于 ${dateTimeFormatter.format(new Date(comment.created_time))}</span>
               <span class="comment_time comment_edited_time">最后编辑于 ${comment.last_edited_time ? dateTimeFormatter.format(new Date(comment.last_edited_time)) : ""}</span>
               <div class="comment_actions">
-                <button class="comment_actions_item" data-action="copy_permalink">复制链接地址</button>
-                <button class="comment_actions_item" data-action="modify">修改</button>
-                <button class="comment_actions_item" data-action="delete">删除</button>
+                <button class="comment_actions_item" data-action="copy_permalink" title="分享">${iconShare}</button>
+                <button class="comment_actions_item" data-action="modify" title="编辑">${iconEdit}</button>
+                <button class="comment_actions_item" data-action="delete" title="删除">${iconDelete}</button>
               </div>
             </div>
             <div class="comment_main">
@@ -742,9 +745,8 @@ const _renderComments = (comments: Comment[]) => {
     }
 
     for (const actions of container.querySelectorAll(".comment_actions_item")) {
-      actions.addEventListener("click", (e) => {
-        if (!(e.target instanceof HTMLButtonElement)) return;
-        const target = e.target as HTMLButtonElement;
+      actions.addEventListener("click", () => {
+        const target = actions as HTMLButtonElement;
 
         const textarea = container.querySelector(
           ".comment_actions_panel textarea",
