@@ -1,6 +1,6 @@
 import { Commenter, GetComment, GetCommentRespBody, Offset, PostComment } from './types';
 
-export async function postComment(env: Env, req: PostComment) {
+export async function postComment(env: Env, req: PostComment): Promise<number> {
 	const db = env.DB;
 
 	// 插入页面（如果不存在）并返回 ID
@@ -33,7 +33,7 @@ export async function postComment(env: Env, req: PostComment) {
 	const offsetId = offsetResult.id;
 
 	// 插入评论
-	await db
+	const commentResult = (await db
 		.prepare(
 			`
         INSERT INTO comments (offset_id, commenter_id, comment, created_time)
@@ -43,10 +43,13 @@ export async function postComment(env: Env, req: PostComment) {
             ?,
             ?
         )
+		RETURNING id
     `,
 		)
 		.bind(offsetId, req.commenter.oauth_provider, req.commenter.oauth_user_id, req.comment, new Date().toISOString())
-		.run();
+		.first())!;
+
+	return commentResult.id as number;
 }
 
 export async function deleteComment(env: Env, id: number) {

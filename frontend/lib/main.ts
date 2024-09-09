@@ -99,6 +99,41 @@ const _decodeJWT = () => {
   return JSON.parse(payload) as JWTPayload;
 };
 
+const _handleAnchor = async () => {
+  const url = new URL(window.location.href);
+  const anchor = url.hash;
+  if (!anchor) return;
+
+  const rawCommentId = /#comment-(\d+)/.exec(anchor)?.[1];
+  if (!rawCommentId) return;
+  const commentId = parseInt(rawCommentId);
+
+  await _fetchComments();
+  const comment = commentsCache?.find((it) => it.id === commentId);
+  if (!comment) return;
+
+  const offsets = [comment.offset.start, comment.offset.end];
+  const paragraph = document.querySelector<HTMLDivElement>(
+    `[data-review-enabled][data-original-document-start="${offsets[0]}"][data-original-document-end="${offsets[1]}"]`,
+  );
+  if (!paragraph) return;
+
+  await _selectOffsetParagraph({
+    el: paragraph,
+    focusReply: true,
+  });
+
+  const commentEl = document.querySelector<HTMLDivElement>(
+    `.comment[data-id="${commentId}"]`,
+  );
+
+  commentEl?.classList.add("comment_highlighting");
+  commentEl?.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+  });
+};
+
 const _logout = () => {
   document.cookie =
     "oauth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure";
@@ -153,7 +188,7 @@ const _registerDialog = ({
   return dialog;
 };
 
-const _selectOffsetParagraph = ({
+const _selectOffsetParagraph = async ({
   el,
   focusReply = false,
 }: {
@@ -168,7 +203,7 @@ const _selectOffsetParagraph = ({
   if (selectedOffset?.dataset.reviewHasComments || focusReply) {
     delete selectedOffset.dataset.reviewFocused;
     selectedOffset.dataset.reviewSelected = "true";
-    _openCommentsPanel();
+    await _openCommentsPanel();
   }
 };
 
@@ -611,6 +646,7 @@ const _renderComments = (comments: Comment[]) => {
               <span class="comment_time comment_created_time">发布于 ${dateTimeFormatter.format(new Date(comment.created_time))}</span>
               <span class="comment_time comment_edited_time">最后编辑于 ${comment.last_edited_time ? dateTimeFormatter.format(new Date(comment.last_edited_time)) : ""}</span>
               <div class="comment_actions">
+                <button class="comment_actions_item" data-action="copy_permalink">复制链接地址</button>
                 <button class="comment_actions_item" data-action="modify">修改</button>
                 <button class="comment_actions_item" data-action="delete">删除</button>
               </div>
@@ -733,6 +769,22 @@ const _renderComments = (comments: Comment[]) => {
         };
 
         switch (target?.dataset.action) {
+          case "copy_permalink": {
+            target.dataset.tag = "using";
+            const commentEl = container.querySelector(
+              `.comment:has([data-tag="using"][data-action="${target?.dataset.action}"])`,
+            ) as HTMLDivElement;
+            delete target.dataset.tag;
+            const id = commentEl?.dataset?.id;
+            if (id == undefined) return;
+
+            const permalink = new URL(window.location.href);
+            permalink.hash = `#comment-${id}`;
+            navigator.clipboard.writeText(permalink.toString()).then(() => {
+              notification.textContent = "已复制评论链接地址";
+            });
+            break;
+          }
           case "login": {
             if (!githubMeta) {
               console.log("githubMeta not ready");
@@ -1085,6 +1137,8 @@ export function setupReview(
 
   // initialize comments panel position
   _closeCommentsPanel();
+
+  _handleAnchor();
 
   console.log(
     `oiwiki-feedback-sys-frontend version ${__VERSION__} has been successfully installed.`,
