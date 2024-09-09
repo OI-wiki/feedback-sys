@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS `commenters`(
     `oauth_user_id` TEXT NOT NULL,
     `name` TEXT NOT NULL,
     `avatar_url` TEXT NOT NULL,
+    `profile_url` TEXT,
     UNIQUE(`oauth_provider`, `oauth_user_id`) 
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_oauth_provider_oauth_user_id ON `commenters`(`oauth_provider`, `oauth_user_id`);

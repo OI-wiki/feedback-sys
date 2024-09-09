@@ -27,6 +27,7 @@ type Comment = {
     oauth_user_id: string;
     name: string | null;
     avatar_url?: string;
+    profile_url?: string;
   };
   comment: string;
   created_time: string;
@@ -532,7 +533,7 @@ const _renderComments = (comments: Comment[]) => {
 
     const username = container.querySelector(
       ".comment_username",
-    ) as HTMLDivElement;
+    ) as HTMLSpanElement;
 
     const commentActionsLogin = container.querySelector(
       ".comment_actions_login",
@@ -607,7 +608,7 @@ const _renderComments = (comments: Comment[]) => {
           </div>
           <div class="comment_base">
             <div class="comment_header">
-              <span class="comment_commenter"></span>
+              <a class="comment_commenter"></a>
               <span class="comment_time comment_created_time">发布于 ${dateTimeFormatter.format(new Date(comment.created_time))}</span>
               <span class="comment_time comment_edited_time">最后编辑于 ${comment.last_edited_time ? dateTimeFormatter.format(new Date(comment.last_edited_time)) : ""}</span>
               <div class="comment_actions">
@@ -626,17 +627,30 @@ const _renderComments = (comments: Comment[]) => {
           <button class="comment_actions_item comment_expand" data-action="fold">折叠</button>
         </div>
       `.trim();
-      commentEl.querySelector(".comment_commenter")!.textContent =
-        comment.commenter.name;
-      commentEl.querySelector(".comment_main .comment_content")!.textContent =
-        comment.comment;
+      const commenter = commentEl.querySelector(
+        ".comment_commenter",
+      )! as HTMLAnchorElement;
+      commenter.textContent = comment.commenter.name;
+
+      const userAvatar = commentEl.querySelector(
+        ".comment_user_avatar",
+      ) as HTMLDivElement;
+
+      if (comment.commenter.profile_url) {
+        commenter.target = "_blank";
+        commenter.href = comment.commenter.profile_url;
+        userAvatar.style.cursor = "pointer";
+        userAvatar.addEventListener("click", () => {
+          window.open(comment.commenter.profile_url);
+        });
+      }
 
       if (!comment.commenter.avatar_url) {
-        const userAvatar = commentEl.querySelector(
-          ".comment_user_avatar",
-        ) as HTMLDivElement;
         userAvatar.innerHTML = iconDefaultAvatar;
       }
+
+      commentEl.querySelector(".comment_main .comment_content")!.textContent =
+        comment.comment;
 
       const commentActionsHeader = commentEl.querySelector(
         ".comment_header .comment_actions",

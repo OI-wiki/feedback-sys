@@ -364,7 +364,14 @@ router.get('/oauth/callback', async (req, env, ctx) => {
 		env.OAUTH_JWT_SECRET,
 	);
 
-	await registerUser(env, userInfo.name ?? userInfo.login, 'github', userInfo.id + '', userInfo.avatar_url);
+	await registerUser(
+		env,
+		userInfo.name ?? userInfo.login,
+		'github',
+		userInfo.id + '',
+		userInfo.avatar_url,
+		`https://github.com/${userInfo.login}`,
+	);
 
 	const redirectUrl = new URL(state.redirect);
 	redirectUrl.searchParams.append('oauth_token', jwt);
