@@ -78,7 +78,7 @@ export async function registerUser(
 	oauth_provider: string,
 	oauth_user_id: string,
 	avatar_url: string,
-	profile_url?: string,
+	profile_url: string,
 ) {
 	const db = env.DB;
 
@@ -114,7 +114,7 @@ export async function getComment(env: Env, req: GetComment): Promise<GetCommentR
 				oauth_provider: comment.oauth_provider as string,
 				oauth_user_id: comment.oauth_user_id as string,
 				avatar_url: comment.avatar_url as string,
-				profile_url: (comment.profile_url as string | null) ?? undefined,
+				profile_url: comment.profile_url as string,
 			},
 			comment: comment.comment as string,
 			created_time: comment.created_time as string,
