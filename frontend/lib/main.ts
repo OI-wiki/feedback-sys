@@ -653,8 +653,8 @@ const _renderComments = (comments: Comment[]) => {
               <span class="comment_time comment_edited_time">最后编辑于 ${comment.last_edited_time ? dateTimeFormatter.format(new Date(comment.last_edited_time)) : ""}</span>
               <div class="comment_actions">
                 <button class="comment_actions_item" data-action="copy_permalink" title="分享">${iconShare}</button>
-                <button class="comment_actions_item comment_actions_item_administrator" data-action="modify" title="编辑">${iconEdit}</button>
-                <button class="comment_actions_item comment_actions_item_administrator" data-action="delete" title="删除">${iconDelete}</button>
+                <button class="comment_actions_item comment_actions_item_administration" data-action="modify" title="编辑">${iconEdit}</button>
+                <button class="comment_actions_item comment_actions_item_administration" data-action="delete" title="删除">${iconDelete}</button>
               </div>
             </div>
             <div class="comment_main">
@@ -697,7 +697,7 @@ const _renderComments = (comments: Comment[]) => {
         ".comment_header .comment_actions",
       ) as HTMLDivElement;
 
-      let shouldShowAdministratorActions = false;
+      let shouldShowAdministrationActions = false;
       let shouldShowCommonActions = true;
 
       if (
@@ -705,28 +705,28 @@ const _renderComments = (comments: Comment[]) => {
         userInfo.provider !== comment.commenter.oauth_provider ||
         userInfo.id !== comment.commenter.oauth_user_id
       ) {
-        shouldShowAdministratorActions = false;
+        shouldShowAdministrationActions = false;
       }
 
       if (userInfo && userInfo.isAdmin === true) {
-        shouldShowAdministratorActions = true;
+        shouldShowAdministrationActions = true;
       }
 
       if (comment.id === -1) {
-        shouldShowAdministratorActions = false;
+        shouldShowAdministrationActions = false;
       }
 
-      if (!shouldShowAdministratorActions) {
+      if (!shouldShowAdministrationActions) {
         commentActionsHeader
           .querySelectorAll<HTMLButtonElement>(
-            ".comment_actions_item_administrator",
+            ".comment_actions_item_administration",
           )
           .forEach((it) => {
             it.style.display = "none";
           });
       }
 
-      if (!shouldShowAdministratorActions && !shouldShowCommonActions) {
+      if (!shouldShowAdministrationActions && !shouldShowCommonActions) {
         commentActionsHeader.style.display = "none";
       }
 
