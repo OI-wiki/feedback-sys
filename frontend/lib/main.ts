@@ -98,9 +98,11 @@ const _getJWT = () => {
 const _decodeJWT = () => {
   const jwt = _getJWT();
   if (!jwt) return;
-  const payload = atob(jwt.split(".")[1]);
+  const raw = jwt.split(".")[1];
 
-  return JSON.parse(payload) as JWTPayload;
+  const bytes = Array.from(atob(raw), (char) => char.charCodeAt(0));
+  const decodedString = new TextDecoder("utf-8").decode(new Uint8Array(bytes));
+  return JSON.parse(decodedString) as JWTPayload;
 };
 
 const _handleAnchor = async () => {
