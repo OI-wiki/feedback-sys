@@ -653,8 +653,8 @@ const _renderComments = (comments: Comment[]) => {
               <span class="comment_time comment_edited_time">最后编辑于 ${comment.last_edited_time ? dateTimeFormatter.format(new Date(comment.last_edited_time)) : ""}</span>
               <div class="comment_actions">
                 <button class="comment_actions_item" data-action="copy_permalink" title="分享">${iconShare}</button>
-                <button class="comment_actions_item" data-action="modify" title="编辑">${iconEdit}</button>
-                <button class="comment_actions_item" data-action="delete" title="删除">${iconDelete}</button>
+                <button class="comment_actions_item comment_actions_item_administrator" data-action="modify" title="编辑">${iconEdit}</button>
+                <button class="comment_actions_item comment_actions_item_administrator" data-action="delete" title="删除">${iconDelete}</button>
               </div>
             </div>
             <div class="comment_main">
@@ -697,19 +697,36 @@ const _renderComments = (comments: Comment[]) => {
         ".comment_header .comment_actions",
       ) as HTMLDivElement;
 
+      let shouldShowAdministratorActions = false;
+      let shouldShowCommonActions = true;
+
       if (
         !userInfo ||
         userInfo.provider !== comment.commenter.oauth_provider ||
         userInfo.id !== comment.commenter.oauth_user_id
       ) {
-        commentActionsHeader.style.display = "none";
+        shouldShowAdministratorActions = false;
       }
 
       if (userInfo && userInfo.isAdmin === true) {
-        commentActionsHeader.style.display = "";
+        shouldShowAdministratorActions = true;
       }
 
       if (comment.id === -1) {
+        shouldShowAdministratorActions = false;
+      }
+
+      if (!shouldShowAdministratorActions) {
+        commentActionsHeader
+          .querySelectorAll<HTMLButtonElement>(
+            ".comment_actions_item_administrator",
+          )
+          .forEach((it) => {
+            it.style.display = "none";
+          });
+      }
+
+      if (!shouldShowAdministratorActions && !shouldShowCommonActions) {
         commentActionsHeader.style.display = "none";
       }
 
