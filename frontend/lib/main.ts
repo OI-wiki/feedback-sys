@@ -671,7 +671,10 @@ const _renderComments = (comments: Comment[]) => {
       const commenter = commentEl.querySelector(
         ".comment_commenter",
       )! as HTMLAnchorElement;
-      commenter.textContent = comment.commenter.name;
+      if (comment.commenter.name) {
+        commenter.textContent = comment.commenter.name;
+        commenter.title = comment.commenter.name;
+      }
 
       const userAvatar = commentEl.querySelector(
         ".comment_user_avatar",

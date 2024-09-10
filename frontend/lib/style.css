@@ -331,10 +331,10 @@
   }
 
   & .comment_header {
-    display: flex;
+    display: grid;
     align-items: center;
 
-    flex-wrap: wrap;
+    grid-template-columns: fit-content(40%) max-content auto;
 
     gap: 3px 10px;
 
@@ -342,12 +342,26 @@
 
     user-select: none;
 
+    & .comment_commenter {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     & .comment_time {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
 
       color: var(--review-secondary-text-color);
+    }
+
+    & .comment_actions {
+      display: none;
+    }
+
+    &:hover .comment_actions {
+      display: flex;
     }
   }
 
