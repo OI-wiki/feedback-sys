@@ -276,6 +276,10 @@
 
   & .comment {
     position: relative;
+
+    &:hover .comment_header .comment_actions {
+      display: flex;
+    }
   }
 
   & .comment_container {
@@ -358,10 +362,6 @@
 
     & .comment_actions {
       display: none;
-    }
-
-    &:hover .comment_actions {
-      display: flex;
     }
   }
 
