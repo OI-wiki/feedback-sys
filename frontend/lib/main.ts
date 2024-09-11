@@ -700,7 +700,7 @@ const _renderComments = (comments: Comment[]) => {
         ".comment_header .comment_actions",
       ) as HTMLDivElement;
 
-      let shouldShowAdministrationActions = false;
+      let shouldShowAdministrationActions = true;
       let shouldShowCommonActions = true;
 
       if (
