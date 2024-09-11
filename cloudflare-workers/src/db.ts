@@ -87,7 +87,7 @@ export async function registerUser(
 
 	await db
 		.prepare(
-			'INSERT INTO commenters (name, oauth_provider, oauth_user_id, avatar_url, profile_url) VALUES (?, ?, ?, ?, ?) ON CONFLICT(oauth_provider, oauth_user_id) DO UPDATE SET name = excluded.name',
+			'INSERT INTO commenters (name, oauth_provider, oauth_user_id, avatar_url, profile_url) VALUES (?, ?, ?, ?, ?) ON CONFLICT(oauth_provider, oauth_user_id) DO UPDATE SET name = excluded.name, avatar_url = excluded.avatar_url, profile_url = excluded.profile_url',
 		)
 		.bind(name, oauth_provider, oauth_user_id, avatar_url, profile_url)
 		.run();
