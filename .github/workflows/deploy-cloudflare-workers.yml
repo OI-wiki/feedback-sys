@@ -60,7 +60,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         name: Checkout Repo
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: cloudflare-workers
           path: cloudflare-workers
