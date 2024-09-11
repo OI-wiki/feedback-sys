@@ -62,7 +62,7 @@ jobs:
         with:
           cmd: build
           dir: frontend
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: review
           path: frontend/dist/
