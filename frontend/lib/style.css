@@ -322,6 +322,8 @@
   & .comment_user_avatar {
     margin-top: 4px;
 
+    user-select: none;
+
     & img,
     & svg {
       width: 100%;
