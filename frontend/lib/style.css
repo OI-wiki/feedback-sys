@@ -78,6 +78,19 @@
   cursor: pointer;
 }
 
+[data-review-enabled] {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    top: 30px;
+    left: 100%;
+    width: 30px;
+    height: calc(100% - 30px);
+    clip-path: polygon(0 0, 0 100%, 100% 0);
+  }
+}
+
 *:has(> .review-context-menu) {
   position: relative;
 }
