@@ -13,17 +13,17 @@
 		"cf-initdb-local": "wrangler d1 execute comments --local --file=schema.sql"
 	},
 	"devDependencies": {
-		"@cloudflare/vitest-pool-workers": "^0.4.5",
-		"@cloudflare/workers-types": "^4.20240712.0",
+		"@cloudflare/vitest-pool-workers": "^0.5.10",
+		"@cloudflare/workers-types": "^4.20240925.0",
 		"prettier": "^3.3.3",
 		"typescript": "^5.5.4",
-		"vitest": "1.5.0",
-		"wrangler": "^3.72.3"
+		"vitest": "2.1.1",
+		"wrangler": "^3.78.10"
 	},
 	"packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
 	"dependencies": {
 		"@tsndr/cloudflare-worker-jwt": "^2.5.3",
-		"itty-router": "^5.0.17",
+		"itty-router": "^5.0.18",
 		"node-html-parser": "^6.1.13"
 	}
 }
