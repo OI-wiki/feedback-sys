@@ -1,4 +1,4 @@
-export const _registerDialog = ({
+export const registerDialog = ({
   idOrClass,
   content,
   actions = new Map<string, (el: HTMLElement) => void>(),

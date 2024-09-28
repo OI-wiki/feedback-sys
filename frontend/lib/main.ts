@@ -2,30 +2,24 @@ import "./style.css";
 import iconComment from "iconify/comment-outline-rounded";
 import iconClose from "iconify/close";
 import { setApiEndpoint } from "./const";
+import { fetchGitHubMeta, handleOAuthToken } from "./auth";
 import {
-  _decodeJWT,
-  _fetchGitHubMeta,
-  _getJWT,
-  _handleOAuthToken,
-  _logout,
-} from "./auth";
-import {
-  _closeContextMenu,
-  _createContextMenu,
-  _openContextMenu,
+  closeContextMenu,
+  createContextMenu,
+  openContextMenu,
 } from "./dom/ctx_menu";
 import {
-  _selectOffsetParagraph,
-  _updateAvailableComments,
-  _closeCommentsPanel,
-  _unselectOffsetParagraph,
-  _openCommentsPanel,
-  _handleAnchor,
+  selectOffsetParagraph,
+  updateAvailableComments,
+  closeCommentsPanel,
+  unselectOffsetParagraph,
+  openCommentsPanel,
+  handleAnchor,
   resetCommentsCache,
   setCommentsButton,
   setCommentsPanel,
 } from "./dom/comment";
-import { _registerDialog } from "./dom/util";
+import { registerDialog } from "./dom/util";
 
 let globalInitialized = false;
 export const __VERSION__: string = __LIB_VERSION__;
@@ -36,7 +30,7 @@ export function setupReview(
 ) {
   setApiEndpoint(endpoint.endsWith("/") ? endpoint : endpoint + "/");
 
-  _handleOAuthToken();
+  handleOAuthToken();
 
   const offsets = Array.from(
     el.querySelectorAll<HTMLElement>(
@@ -55,54 +49,54 @@ export function setupReview(
     offset.dataset.reviewEnabled = "true";
     offset.addEventListener("click", (e) => {
       e.stopPropagation(); // Prevent bubble so that the document click event won't be triggered
-      _selectOffsetParagraph({
+      selectOffsetParagraph({
         el: e.currentTarget as HTMLElement,
       });
     });
     offset.addEventListener("mouseenter", (e) => {
-      _openContextMenu({
+      openContextMenu({
         el: e.currentTarget as HTMLElement,
       });
     });
     offset.addEventListener("mouseleave", (e) => {
-      _closeContextMenu({
+      closeContextMenu({
         el: e.currentTarget as HTMLElement,
       });
     });
     // pre render context menu
-    _createContextMenu({ el: offset });
+    createContextMenu({ el: offset });
   }
 
   // clear cache
   resetCommentsCache();
 
-  _updateAvailableComments();
-  _fetchGitHubMeta();
+  updateAvailableComments();
+  fetchGitHubMeta();
 
   if (globalInitialized) {
-    _closeCommentsPanel();
+    closeCommentsPanel();
     console.log("oiwiki-feedback-sys-frontend has been successfully reset.");
     return;
   }
 
   document.addEventListener("click", () => {
-    _unselectOffsetParagraph();
+    unselectOffsetParagraph();
   });
 
   setCommentsButton(
-    _registerDialog({
+    registerDialog({
       idOrClass: "review-comments-button",
       content: `
     <button data-action="open">
       ${iconComment}
     </button>
     `,
-      actions: new Map([["open", () => _openCommentsPanel()]]),
+      actions: new Map([["open", () => openCommentsPanel()]]),
     }),
   );
 
   setCommentsPanel(
-    _registerDialog({
+    registerDialog({
       idOrClass: "review-comments-panel",
       content: `
     <div class="panel_header">
@@ -113,14 +107,14 @@ export function setupReview(
     </div>
     <div class="panel_main"></div>
     `,
-      actions: new Map([["close", () => _closeCommentsPanel()]]),
+      actions: new Map([["close", () => closeCommentsPanel()]]),
     }),
   );
 
   // initialize comments panel position
-  _closeCommentsPanel();
+  closeCommentsPanel();
 
-  _handleAnchor();
+  handleAnchor();
 
   console.log(
     `oiwiki-feedback-sys-frontend version ${__VERSION__} has been successfully installed.`,

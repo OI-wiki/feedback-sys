@@ -3,7 +3,7 @@ import { apiEndpoint } from "./const";
 
 export let githubMeta: GitHubMeta;
 
-export const _fetchGitHubMeta = async () => {
+export const fetchGitHubMeta = async () => {
   const res = await fetch(`${apiEndpoint}meta/github-app`, {
     method: "GET",
   });
@@ -15,7 +15,7 @@ export const _fetchGitHubMeta = async () => {
   if (!githubMeta) githubMeta = (await res.json()).data;
 };
 
-export const _handleOAuthToken = () => {
+export const handleOAuthToken = () => {
   const url = new URL(window.location.href);
   const token = url.searchParams.get("oauth_token");
   if (!token) return;
@@ -24,7 +24,7 @@ export const _handleOAuthToken = () => {
   window.history.replaceState(null, "", url.toString());
 };
 
-export const _getJWT = () => {
+export const getJWT = () => {
   // https://developer.mozilla.org/zh-CN/docs/Web/API/Document/cookie#%E7%A4%BA%E4%BE%8B_2_%E5%BE%97%E5%88%B0%E5%90%8D%E4%B8%BA_test2_%E7%9A%84_cookie
   return document.cookie.replace(
     /(?:(?:^|.*;\s*)oauth_token\s*\=\s*([^;]*).*$)|^.*$/,
@@ -32,8 +32,8 @@ export const _getJWT = () => {
   );
 };
 
-export const _decodeJWT = () => {
-  const jwt = _getJWT();
+export const decodeJWT = () => {
+  const jwt = getJWT();
   if (!jwt) return;
   const raw = jwt.split(".")[1];
 
@@ -42,7 +42,7 @@ export const _decodeJWT = () => {
   return JSON.parse(decodedString) as JWTPayload;
 };
 
-export const _logout = () => {
+export const logout = () => {
   document.cookie =
     "oauth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure";
 };
