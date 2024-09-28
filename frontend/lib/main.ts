@@ -126,7 +126,7 @@ const _handleAnchor = async () => {
 
   await _selectOffsetParagraph({
     el: paragraph,
-    focusReply: true,
+    forceOpenCommentsPanel: true,
   });
 
   const commentEl = document.querySelector<HTMLDivElement>(
@@ -196,20 +196,21 @@ const _registerDialog = ({
 
 const _selectOffsetParagraph = async ({
   el,
-  focusReply = false,
+  forceOpenCommentsPanel = false,
 }: {
   el: HTMLElement;
-  focusReply?: boolean;
+  forceOpenCommentsPanel?: boolean;
 }) => {
   if (selectedOffset !== el) {
     delete selectedOffset?.dataset.reviewSelected;
     selectedOffset = el;
   }
 
-  if (selectedOffset?.dataset.reviewHasComments || focusReply) {
+  if (selectedOffset?.dataset.reviewHasComments || forceOpenCommentsPanel) {
     delete selectedOffset.dataset.reviewFocused;
     selectedOffset.dataset.reviewSelected = "true";
-    await _openCommentsPanel();
+    // 只有在点击评论按钮时才会 focus 到评论框，这里 forceOpenCommentsPanel === true 就等价于点击评论按钮
+    await _openCommentsPanel(forceOpenCommentsPanel);
   }
 };
 
@@ -234,7 +235,7 @@ const _createContextMenu = ({ el }: { el: HTMLElement }) => {
         () => {
           _selectOffsetParagraph({
             el,
-            focusReply: true,
+            forceOpenCommentsPanel: true,
           });
         },
       ],
@@ -274,7 +275,7 @@ const _closeContextMenu = ({ el }: { el: HTMLElement }) => {
   contextMenu.style.display = "none";
 };
 
-const _openCommentsPanel = async () => {
+const _openCommentsPanel = async (focusTextarea: boolean = true) => {
   const comments = [...(await _fetchComments())];
 
   const selected = selectedOffset;
@@ -317,10 +318,12 @@ const _openCommentsPanel = async () => {
     behavior: "smooth",
     block: "start",
   });
-  const textarea = selectedCommentsGroup?.querySelector(
-    ".comment_actions_panel textarea",
-  ) as HTMLTextAreaElement | undefined;
-  textarea?.focus();
+  if (focusTextarea) {
+    const textarea = selectedCommentsGroup?.querySelector(
+      ".comment_actions_panel textarea",
+    ) as HTMLTextAreaElement | undefined;
+    textarea?.focus();
+  }
 
   commentsButton.classList.add("review_hidden");
   commentsPanel.classList.remove("review_hidden");
