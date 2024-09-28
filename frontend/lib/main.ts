@@ -1053,7 +1053,6 @@ const _renderComments = (comments: Comment[]) => {
     commentExpand.addEventListener("click", () => {
       commentExpand.style.display = "none";
       commentFold.style.display = "";
-      commentMain.style.maxHeight = "100%";
       commentMain.style.maxHeight = commentMain.scrollHeight + "px";
     });
     commentFold.addEventListener("click", () => {
