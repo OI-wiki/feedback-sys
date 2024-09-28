@@ -1,7 +1,7 @@
 #:schema node_modules/wrangler/config-schema.json
 name = "feedback-sys-backend"
 main = "src/index.ts"
-compatibility_date = "2023-05-18"
+compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 routes = [
   { pattern = "feedback-sys.mgt.moe", custom_domain = true }

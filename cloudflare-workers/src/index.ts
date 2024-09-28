@@ -11,7 +11,7 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-import { AutoRouter, cors, error, IRequest } from 'itty-router';
+import { AutoRouter, cors, error, html, IRequest } from 'itty-router';
 import {
 	DeleteCommentIDParam,
 	GetCommentBody,
@@ -67,6 +67,11 @@ const { preflight, corsify } = cors({
 const router = AutoRouter<IRequest, [Env, ExecutionContext]>({
 	before: [preflight],
 	finally: [corsify],
+});
+
+router.get('/', async () => {
+	return html`<h1>OI-Wiki feedback sys backend</h1>
+		See <a href="https://github.com/OI-wiki/feedback-sys">GitHub</a> for more information.`;
 });
 
 router.post('/comment/:path', async (req, env, ctx) => {
