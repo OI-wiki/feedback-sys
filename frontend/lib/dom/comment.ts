@@ -712,6 +712,14 @@ export const renderComments = async (comments: Comment[]) => {
             }
 
             notification.textContent = "";
+            await openCommentsPanel();
+            const newSubmitButton = commentsPanel.querySelector(
+              "[data-review-selected] button[data-action='submit']",
+            ) as HTMLButtonElement;
+
+            if (newSubmitButton) {
+              newSubmitButton.disabled = true;
+            }
 
             try {
               await submitComment({
@@ -742,14 +750,6 @@ export const renderComments = async (comments: Comment[]) => {
               if (newTextArea) {
                 newTextArea.value = textarea.value;
               }
-            }
-
-            await openCommentsPanel();
-            const newSubmitButton = commentsPanel.querySelector(
-              "[data-review-selected] button[data-action='submit']",
-            ) as HTMLButtonElement;
-            if (newSubmitButton) {
-              newSubmitButton.disabled = true;
             }
 
             break;
@@ -803,6 +803,7 @@ export const renderComments = async (comments: Comment[]) => {
           case "modify_submit": {
             const id = container.dataset.modifingId;
             if (id == undefined) return;
+            await openCommentsPanel();
 
             try {
               await _modifyComment({
@@ -832,7 +833,6 @@ export const renderComments = async (comments: Comment[]) => {
               }
             }
 
-            await openCommentsPanel(); // ??
             break;
           }
           case "delete": {
