@@ -3,7 +3,7 @@ import iconShare from "iconify/share";
 import iconEdit from "iconify/edit";
 import iconDelete from "iconify/delete";
 import { Comment } from "../types";
-import { _getJWT, _decodeJWT, _logout, githubMeta } from "../auth";
+import { getJWT, decodeJWT, logout, githubMeta } from "../auth";
 import { apiEndpoint } from "../const";
 import { groupBy, dateTimeFormatter } from "../util";
 
@@ -26,7 +26,7 @@ export const setCommentsPanel = (panel: HTMLElement) => {
   commentsPanel = panel;
 };
 
-export const _handleAnchor = async () => {
+export const handleAnchor = async () => {
   const url = new URL(window.location.href);
   const anchor = url.hash;
   if (!anchor) return;
@@ -35,7 +35,7 @@ export const _handleAnchor = async () => {
   if (!rawCommentId) return;
   const commentId = parseInt(rawCommentId);
 
-  await _fetchComments();
+  await fetchComments();
   const comment = commentsCache?.find((it) => it.id === commentId);
   if (!comment) return;
 
@@ -45,7 +45,7 @@ export const _handleAnchor = async () => {
   );
   if (!paragraph) return;
 
-  await _selectOffsetParagraph({
+  await selectOffsetParagraph({
     el: paragraph,
     focusReply: true,
   });
@@ -61,7 +61,7 @@ export const _handleAnchor = async () => {
   });
 };
 
-export const _registerDialog = ({
+export const registerDialog = ({
   idOrClass,
   content,
   actions = new Map<string, (el: HTMLElement) => void>(),
@@ -110,7 +110,7 @@ export const _registerDialog = ({
   return dialog;
 };
 
-export const _selectOffsetParagraph = async ({
+export const selectOffsetParagraph = async ({
   el,
   focusReply = false,
 }: {
@@ -125,17 +125,17 @@ export const _selectOffsetParagraph = async ({
   if (selectedOffset?.dataset.reviewHasComments || focusReply) {
     delete selectedOffset.dataset.reviewFocused;
     selectedOffset.dataset.reviewSelected = "true";
-    await _openCommentsPanel();
+    await openCommentsPanel();
   }
 };
 
-export const _unselectOffsetParagraph = () => {
+export const unselectOffsetParagraph = () => {
   delete selectedOffset?.dataset.reviewSelected;
   selectedOffset = null;
 };
 
-export const _openCommentsPanel = async () => {
-  const comments = [...(await _fetchComments())];
+export const openCommentsPanel = async () => {
+  const comments = [...(await fetchComments())];
 
   const selected = selectedOffset;
 
@@ -165,7 +165,7 @@ export const _openCommentsPanel = async () => {
     });
   }
 
-  await _renderComments(comments);
+  await renderComments(comments);
   let selectedCommentsGroup = document.querySelector(
     `#review-comments-panel .comments_group[data-original-document-start="${selectedOffset?.dataset.originalDocumentStart}"][data-original-document-end="${selectedOffset?.dataset.originalDocumentEnd}"]`,
   ) as HTMLElement;
@@ -186,12 +186,12 @@ export const _openCommentsPanel = async () => {
   commentsPanel.classList.remove("review_hidden");
 };
 
-export const _closeCommentsPanel = () => {
+export const closeCommentsPanel = () => {
   commentsPanel.classList.add("review_hidden");
   commentsButton.classList.remove("review_hidden");
 };
 
-export const _submitComment = async ({
+export const submitComment = async ({
   offsets,
   content,
 }: {
@@ -217,7 +217,7 @@ export const _submitComment = async ({
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${_getJWT()}`,
+        Authorization: `Bearer ${getJWT()}`,
       },
       body: JSON.stringify({
         ...comment,
@@ -231,9 +231,9 @@ export const _submitComment = async ({
     commentsCache.push({
       ...comment,
       commenter: {
-        name: _decodeJWT()?.name ?? "未知用户",
-        oauth_provider: _decodeJWT()?.provider as "github",
-        oauth_user_id: _decodeJWT()?.id ?? "-1",
+        name: decodeJWT()?.name ?? "未知用户",
+        oauth_provider: decodeJWT()?.provider as "github",
+        oauth_user_id: decodeJWT()?.id ?? "-1",
       },
       id: commentsCache.length,
       created_time: new Date().toISOString(),
@@ -257,8 +257,8 @@ export const _submitComment = async ({
     );
   }
 
-  await _fetchComments(true);
-  _updateAvailableComments();
+  await fetchComments(true);
+  updateAvailableComments();
 };
 
 export const _modifyComment = async ({
@@ -274,7 +274,7 @@ export const _modifyComment = async ({
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${_getJWT()}`,
+        Authorization: `Bearer ${getJWT()}`,
       },
       body: JSON.stringify({
         comment,
@@ -305,8 +305,8 @@ export const _modifyComment = async ({
     );
   }
 
-  await _fetchComments(true);
-  _updateAvailableComments();
+  await fetchComments(true);
+  updateAvailableComments();
 };
 
 export const _deleteComment = async ({ id }: { id: number }) => {
@@ -315,7 +315,7 @@ export const _deleteComment = async ({ id }: { id: number }) => {
     {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${_getJWT()}`,
+        Authorization: `Bearer ${getJWT()}`,
       },
     },
   );
@@ -341,11 +341,11 @@ export const _deleteComment = async ({ id }: { id: number }) => {
     commentsCache = commentsCache.filter((it) => it.id !== id);
   }
 
-  await _fetchComments(true);
-  _updateAvailableComments();
+  await fetchComments(true);
+  updateAvailableComments();
 };
 
-export const _fetchComments = async (force: boolean = false) => {
+export const fetchComments = async (force: boolean = false) => {
   if (!force && commentsCache) {
     return commentsCache;
   }
@@ -363,7 +363,7 @@ export const _fetchComments = async (force: boolean = false) => {
   return comments;
 };
 
-export const _renderComments = async (comments: Comment[]) => {
+export const renderComments = async (comments: Comment[]) => {
   const commentsEl = commentsPanel.querySelector(
     ".panel_main",
   )! as HTMLDivElement;
@@ -443,7 +443,7 @@ export const _renderComments = async (comments: Comment[]) => {
       "button.comment_actions_item[data-action='logout']",
     ) as HTMLButtonElement;
 
-    const userInfo = _decodeJWT();
+    const userInfo = decodeJWT();
     if (!userInfo) {
       username.textContent = "登录到 GitHub 以发表评论";
       commentActionsLogout.style.display = "none";
@@ -646,7 +646,7 @@ export const _renderComments = async (comments: Comment[]) => {
           } else if (e instanceof Response) {
             if (e.status === 401) {
               notification.textContent = "身份验证失效，请重新登录";
-              _logout();
+              logout();
               return;
             }
             if (
@@ -691,7 +691,7 @@ export const _renderComments = async (comments: Comment[]) => {
             break;
           }
           case "logout": {
-            _logout();
+            logout();
             window.location.reload();
             break;
           }
@@ -714,7 +714,7 @@ export const _renderComments = async (comments: Comment[]) => {
             notification.textContent = "";
 
             try {
-              await _submitComment({
+              await submitComment({
                 offsets: [
                   parseInt(selectedOffset!.dataset.originalDocumentStart!),
                   parseInt(selectedOffset!.dataset.originalDocumentEnd!),
@@ -727,7 +727,7 @@ export const _renderComments = async (comments: Comment[]) => {
             } catch (error) {
               _handleError(error);
             } finally {
-              await _openCommentsPanel();
+              await openCommentsPanel();
 
               const newNotification = commentsPanel.querySelector(
                 "[data-review-selected] .comment_actions_notification",
@@ -744,7 +744,7 @@ export const _renderComments = async (comments: Comment[]) => {
               }
             }
 
-            await _openCommentsPanel();
+            await openCommentsPanel();
             const newSubmitButton = commentsPanel.querySelector(
               "[data-review-selected] button[data-action='submit']",
             ) as HTMLButtonElement;
@@ -815,7 +815,7 @@ export const _renderComments = async (comments: Comment[]) => {
             } catch (error) {
               _handleError(error);
             } finally {
-              await _openCommentsPanel();
+              await openCommentsPanel();
 
               const newNotification = commentsPanel.querySelector(
                 "[data-review-selected] .comment_actions_notification",
@@ -832,7 +832,7 @@ export const _renderComments = async (comments: Comment[]) => {
               }
             }
 
-            await _openCommentsPanel(); // ??
+            await openCommentsPanel(); // ??
             break;
           }
           case "delete": {
@@ -847,7 +847,7 @@ export const _renderComments = async (comments: Comment[]) => {
             _deleteComment({ id: parseInt(id) })
               .catch(_handleError)
               .finally(() => {
-                _openCommentsPanel().then(() => {
+                openCommentsPanel().then(() => {
                   const newNotification = commentsPanel.querySelector(
                     "[data-review-selected] .comment_actions_notification",
                   );
@@ -863,7 +863,7 @@ export const _renderComments = async (comments: Comment[]) => {
                 });
               });
 
-            _openCommentsPanel().then(() => {
+            openCommentsPanel().then(() => {
               const newNotification = commentsPanel.querySelector(
                 "[data-review-selected] .comment_actions_notification",
               );
@@ -929,14 +929,14 @@ export const _renderComments = async (comments: Comment[]) => {
   }
 };
 
-export const _updateAvailableComments = async () => {
+export const updateAvailableComments = async () => {
   const offsets = Array.from(
     document.querySelectorAll<HTMLElement>(
       "[data-review-enabled][data-original-document-start][data-original-document-end]",
     ),
   );
 
-  await _fetchComments();
+  await fetchComments();
 
   for (let offset of offsets) {
     delete offset.dataset.reviewHasComments;

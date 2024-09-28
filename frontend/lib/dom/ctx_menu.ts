@@ -1,10 +1,10 @@
-import { _selectOffsetParagraph } from "./comment";
-import { _registerDialog } from "./util";
+import { selectOffsetParagraph } from "./comment";
+import { registerDialog } from "./util";
 import iconAddComment from "iconify/add-comment-outline-rounded";
 
-export const _createContextMenu = ({ el }: { el: HTMLElement }) => {
+export const createContextMenu = ({ el }: { el: HTMLElement }) => {
   if (el.querySelector(`.review-context-menu`)) return;
-  _registerDialog({
+  registerDialog({
     idOrClass: "review-context-menu",
     content: `
     <button data-action="comment">
@@ -16,7 +16,7 @@ export const _createContextMenu = ({ el }: { el: HTMLElement }) => {
       [
         "comment",
         () => {
-          _selectOffsetParagraph({
+          selectOffsetParagraph({
             el,
             focusReply: true,
           });
@@ -36,7 +36,7 @@ export const _createContextMenu = ({ el }: { el: HTMLElement }) => {
   });
 };
 
-export const _openContextMenu = ({ el }: { el: HTMLElement }) => {
+export const openContextMenu = ({ el }: { el: HTMLElement }) => {
   const contextMenu = el.querySelector(`.review-context-menu`) as
     | HTMLDivElement
     | undefined;
@@ -47,7 +47,7 @@ export const _openContextMenu = ({ el }: { el: HTMLElement }) => {
   contextMenu.style.display = "";
 };
 
-export const _closeContextMenu = ({ el }: { el: HTMLElement }) => {
+export const closeContextMenu = ({ el }: { el: HTMLElement }) => {
   const contextMenu = el.querySelector(
     `.review-context-menu:not([style*="display: none"])`,
   ) as HTMLDivElement | undefined;
