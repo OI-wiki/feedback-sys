@@ -10,7 +10,7 @@ mode = "smart"
 [[d1_databases]]
 binding = "DB"
 database_name = "comments"
-database_id = "eba686c4-352d-4a8d-8f4e-fb3801166973"
+database_id = "146d0342-8df8-426d-b2e1-25f366251b40"
 
 # Automatically place your workloads in an optimal location to minimize latency.
 # If you are running back-end logic in a Worker, running it closer to your back-end infrastructure
