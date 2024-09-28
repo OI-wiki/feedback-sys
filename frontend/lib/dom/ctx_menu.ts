@@ -18,7 +18,7 @@ export const createContextMenu = ({ el }: { el: HTMLElement }) => {
         () => {
           selectOffsetParagraph({
             el,
-            focusReply: true,
+            forceOpenCommentsPanel: true,
           });
         },
       ],
