@@ -306,7 +306,7 @@ const _openCommentsPanel = async (focusTextarea: boolean = true) => {
     });
   }
 
-  _renderComments(comments);
+  await _renderComments(comments);
   let selectedCommentsGroup = document.querySelector(
     `#review-comments-panel .comments_group[data-original-document-start="${selectedOffset?.dataset.originalDocumentStart}"][data-original-document-end="${selectedOffset?.dataset.originalDocumentEnd}"]`,
   ) as HTMLElement;
@@ -506,7 +506,7 @@ const _fetchComments = async (force: boolean = false) => {
   return comments;
 };
 
-const _renderComments = (comments: Comment[]) => {
+const _renderComments = async (comments: Comment[]) => {
   const commentsEl = commentsPanel.querySelector(
     ".panel_main",
   )! as HTMLDivElement;
@@ -770,7 +770,7 @@ const _renderComments = (comments: Comment[]) => {
     }
 
     for (const actions of container.querySelectorAll(".comment_actions_item")) {
-      actions.addEventListener("click", () => {
+      actions.addEventListener("click", async () => {
         const target = actions as HTMLButtonElement;
 
         const textarea = container.querySelector(
@@ -821,9 +821,8 @@ const _renderComments = (comments: Comment[]) => {
 
             const permalink = new URL(window.location.href);
             permalink.hash = `#comment-${id}`;
-            navigator.clipboard.writeText(permalink.toString()).then(() => {
-              notification.textContent = "已复制评论链接地址";
-            });
+            await navigator.clipboard.writeText(permalink.toString());
+            notification.textContent = "已复制评论链接地址";
             break;
           }
           case "login": {
@@ -857,43 +856,45 @@ const _renderComments = (comments: Comment[]) => {
 
             notification.textContent = "";
 
-            _submitComment({
-              offsets: [
-                parseInt(selectedOffset!.dataset.originalDocumentStart!),
-                parseInt(selectedOffset!.dataset.originalDocumentEnd!),
-              ],
-              content: textarea.value,
-            })
-              .then(() => {
-                textarea.value = "";
-                notification.textContent = "";
-              })
-              .catch(_handleError)
-              .finally(() => {
-                _openCommentsPanel().then(() => {
-                  const newNotification = commentsPanel.querySelector(
-                    "[data-review-selected] .comment_actions_notification",
-                  );
-                  const newTextArea = commentsPanel.querySelector(
-                    "[data-review-selected] .comment_actions_panel textarea",
-                  ) as HTMLTextAreaElement;
-                  if (newNotification) {
-                    newNotification.textContent = notification.textContent;
-                  }
-                  if (newTextArea) {
-                    newTextArea.value = textarea.value;
-                  }
-                });
+            try {
+              await _submitComment({
+                offsets: [
+                  parseInt(selectedOffset!.dataset.originalDocumentStart!),
+                  parseInt(selectedOffset!.dataset.originalDocumentEnd!),
+                ],
+                content: textarea.value,
               });
 
-            _openCommentsPanel().then(() => {
-              const newSubmitButton = commentsPanel.querySelector(
-                "[data-review-selected] button[data-action='submit']",
-              ) as HTMLButtonElement;
-              if (newSubmitButton) {
-                newSubmitButton.disabled = true;
+              textarea.value = "";
+              notification.textContent = "";
+            } catch (error) {
+              _handleError(error);
+            } finally {
+              await _openCommentsPanel();
+
+              const newNotification = commentsPanel.querySelector(
+                "[data-review-selected] .comment_actions_notification"
+              );
+              const newTextArea = commentsPanel.querySelector(
+                "[data-review-selected] .comment_actions_panel textarea"
+              ) as HTMLTextAreaElement;
+
+              if (newNotification) {
+                newNotification.textContent = notification.textContent;
               }
-            });
+              if (newTextArea) {
+                newTextArea.value = textarea.value;
+              }
+            }
+
+            await _openCommentsPanel();
+            const newSubmitButton = commentsPanel.querySelector(
+              "[data-review-selected] button[data-action='submit']"
+            ) as HTMLButtonElement;
+            if (newSubmitButton) {
+              newSubmitButton.disabled = true;
+            }
+
             break;
           }
           case "modify": {
@@ -946,30 +947,33 @@ const _renderComments = (comments: Comment[]) => {
             const id = container.dataset.modifingId;
             if (id == undefined) return;
 
-            _modifyComment({ id: parseInt(id), comment: textarea.value })
-              .then(() => {
-                textarea.value = "";
-                notification.textContent = "";
-              })
-              .catch(_handleError)
-              .finally(() => {
-                _openCommentsPanel().then(() => {
-                  const newNotification = commentsPanel.querySelector(
-                    "[data-review-selected] .comment_actions_notification",
-                  );
-                  const newTextArea = commentsPanel.querySelector(
-                    "[data-review-selected] .comment_actions_panel textarea",
-                  ) as HTMLTextAreaElement;
-                  if (newNotification) {
-                    newNotification.textContent = notification.textContent;
-                  }
-                  if (newTextArea) {
-                    newTextArea.value = textarea.value;
-                  }
-                });
-              });
+            try {
+              await _modifyComment({ id: parseInt(id), comment: textarea.value });
 
-            _openCommentsPanel();
+              textarea.value = "";
+              notification.textContent = "";
+            } catch (error) {
+              _handleError(error);
+            } finally {
+              await _openCommentsPanel();
+
+              const newNotification = commentsPanel.querySelector(
+                "[data-review-selected] .comment_actions_notification"
+              );
+              const newTextArea = commentsPanel.querySelector(
+                "[data-review-selected] .comment_actions_panel textarea"
+              ) as HTMLTextAreaElement;
+
+              if (newNotification) {
+                newNotification.textContent = notification.textContent;
+              }
+              if (newTextArea) {
+                newTextArea.value = textarea.value;
+              }
+            }
+
+
+            await _openCommentsPanel(); // ??
             break;
           }
           case "delete": {
