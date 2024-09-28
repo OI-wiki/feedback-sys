@@ -192,6 +192,20 @@ Enjoy!
 
 要进行开发环境调试，请运行 `yarn dev`。
 
+您需要在 `cloudflare-workers/.dev.vars` 文件中配置相关环境变量：
+
+```
+ADMINISTRATOR_SECRET="xxx"
+TELEGRAM_BOT_TOKEN="111:222-333"
+TELEGRAM_CHAT_ID="401081860"
+GITHUB_APP_CLIENT_ID="Iv1.05d621294f305efc"
+GITHUB_APP_CLIENT_SECRET="111111111111111111111111111111111"
+OAUTH_JWT_SECRET="111111111111111111111111111"
+GITHUB_ORG_ADMINISTRATOR_TEAM="OI-wiki/feedback-sys-mod"
+```
+
+关于 GitHub App 的配置，需要创建一个 GitHub App，并在 `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET` 中填入对应的值。并且在 GitHub App 的设置中，把 `callback URL` 设置为 `http://localhost:8787/oauth/callback`。
+
 要进行单元测试，请运行 `yarn test`。
 
 ### frontend
