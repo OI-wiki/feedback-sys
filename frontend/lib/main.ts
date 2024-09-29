@@ -106,6 +106,9 @@ export function setupReview(
       </button>
     </div>
     <div class="panel_main"></div>
+    <div class="panel_footer">
+      - Powered by <a href="https://github.com/OI-wiki/feedback-sys" target="_blank">OI Wiki Feedback System</a> -
+    </div>
     `,
       actions: new Map([["close", () => closeCommentsPanel()]]),
     }),
