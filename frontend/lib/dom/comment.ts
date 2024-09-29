@@ -2,6 +2,7 @@ import iconDefaultAvatar from "iconify/account-circle";
 import iconShare from "iconify/share";
 import iconEdit from "iconify/edit";
 import iconDelete from "iconify/delete";
+import iconInfoOutlineRounded from "iconify/info-outline-rounded";
 import { Comment } from "../types";
 import { getJWT, decodeJWT, logout, githubMeta } from "../auth";
 import { apiEndpoint } from "../const";
@@ -937,6 +938,15 @@ export const renderComments = async (comments: Comment[]) => {
       commentFold.style.display = "none";
       commentMain.style.maxHeight = `${offsetHeight}px`;
     });
+  }
+
+  if (commentsEl.children.length === 0) {
+    commentsEl.innerHTML = `
+      <div class="comments_empty">
+        ${iconInfoOutlineRounded}
+        <span>本页暂无评论，点击段落右侧的评论按钮以添加评论</span>
+      </div>
+    `.trim();
   }
 };
 
