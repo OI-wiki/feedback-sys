@@ -196,9 +196,11 @@ export const closeCommentsPanel = () => {
 export const submitComment = async ({
   offsets,
   content,
+  onPendingFulfilled,
 }: {
   offsets: [number, number];
   content: string;
+  onPendingFulfilled?: () => Promise<void>;
 }) => {
   const commitHash = sessionStorage.getItem("commitHash");
   if (!commitHash) {
@@ -243,7 +245,7 @@ export const submitComment = async ({
       pending: true,
     });
   }
-  await openCommentsPanel();
+  await onPendingFulfilled?.();
   const resp = await res;
 
   if (!resp.ok) {
@@ -266,9 +268,11 @@ export const submitComment = async ({
 export const modifyComment = async ({
   id,
   comment,
+  onPendingFulfilled,
 }: {
   id: number;
   comment: string;
+  onPendingFulfilled?: () => Promise<void>;
 }) => {
   const res = fetch(
     `${apiEndpoint}comment/${encodeURIComponent(new URL(window.location.href).pathname)}/id/${id}`,
@@ -290,7 +294,7 @@ export const modifyComment = async ({
     );
   }
 
-  await openCommentsPanel();
+  await onPendingFulfilled?.();
   const resp = await res;
 
   if (!resp.ok) {
@@ -730,6 +734,9 @@ export const renderComments = async (comments: Comment[]) => {
                   parseInt(selectedOffset!.dataset.originalDocumentEnd!),
                 ],
                 content: textarea.value,
+                onPendingFulfilled: async () => {
+                  await openCommentsPanel();
+                },
               });
 
               textarea.value = "";
@@ -810,6 +817,9 @@ export const renderComments = async (comments: Comment[]) => {
               await modifyComment({
                 id: parseInt(id),
                 comment: textarea.value,
+                onPendingFulfilled: async () => {
+                  await openCommentsPanel();
+                },
               });
 
               textarea.value = "";
