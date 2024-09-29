@@ -243,7 +243,7 @@ export const submitComment = async ({
       pending: true,
     });
   }
-
+  await openCommentsPanel();
   const resp = await res;
 
   if (!resp.ok) {
@@ -263,7 +263,7 @@ export const submitComment = async ({
   updateAvailableComments();
 };
 
-export const _modifyComment = async ({
+export const modifyComment = async ({
   id,
   comment,
 }: {
@@ -290,6 +290,7 @@ export const _modifyComment = async ({
     );
   }
 
+  await openCommentsPanel();
   const resp = await res;
 
   if (!resp.ok) {
@@ -714,7 +715,6 @@ export const renderComments = async (comments: Comment[]) => {
             }
 
             notification.textContent = "";
-            await openCommentsPanel();
             const newSubmitButton = commentsPanel.querySelector(
               "[data-review-selected] button[data-action='submit']",
             ) as HTMLButtonElement;
@@ -805,10 +805,9 @@ export const renderComments = async (comments: Comment[]) => {
           case "modify_submit": {
             const id = container.dataset.modifingId;
             if (id == undefined) return;
-            await openCommentsPanel();
 
             try {
-              await _modifyComment({
+              await modifyComment({
                 id: parseInt(id),
                 comment: textarea.value,
               });
