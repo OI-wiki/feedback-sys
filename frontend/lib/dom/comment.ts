@@ -196,9 +196,11 @@ export const closeCommentsPanel = () => {
 export const submitComment = async ({
   offsets,
   content,
+  onPendingFulfilled,
 }: {
   offsets: [number, number];
   content: string;
+  onPendingFulfilled?: () => Promise<void>;
 }) => {
   const commitHash = sessionStorage.getItem("commitHash");
   if (!commitHash) {
@@ -243,7 +245,7 @@ export const submitComment = async ({
       pending: true,
     });
   }
-
+  await onPendingFulfilled?.();
   const resp = await res;
 
   if (!resp.ok) {
@@ -263,12 +265,14 @@ export const submitComment = async ({
   updateAvailableComments();
 };
 
-export const _modifyComment = async ({
+export const modifyComment = async ({
   id,
   comment,
+  onPendingFulfilled,
 }: {
   id: number;
   comment: string;
+  onPendingFulfilled?: () => Promise<void>;
 }) => {
   const res = fetch(
     `${apiEndpoint}comment/${encodeURIComponent(new URL(window.location.href).pathname)}/id/${id}`,
@@ -290,6 +294,7 @@ export const _modifyComment = async ({
     );
   }
 
+  await onPendingFulfilled?.();
   const resp = await res;
 
   if (!resp.ok) {
@@ -714,7 +719,6 @@ export const renderComments = async (comments: Comment[]) => {
             }
 
             notification.textContent = "";
-            await openCommentsPanel();
             const newSubmitButton = commentsPanel.querySelector(
               "[data-review-selected] button[data-action='submit']",
             ) as HTMLButtonElement;
@@ -730,6 +734,9 @@ export const renderComments = async (comments: Comment[]) => {
                   parseInt(selectedOffset!.dataset.originalDocumentEnd!),
                 ],
                 content: textarea.value,
+                onPendingFulfilled: async () => {
+                  await openCommentsPanel();
+                },
               });
 
               textarea.value = "";
@@ -805,12 +812,14 @@ export const renderComments = async (comments: Comment[]) => {
           case "modify_submit": {
             const id = container.dataset.modifingId;
             if (id == undefined) return;
-            await openCommentsPanel();
 
             try {
-              await _modifyComment({
+              await modifyComment({
                 id: parseInt(id),
                 comment: textarea.value,
+                onPendingFulfilled: async () => {
+                  await openCommentsPanel();
+                },
               });
 
               textarea.value = "";
