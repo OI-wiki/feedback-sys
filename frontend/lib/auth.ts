@@ -1,9 +1,7 @@
 import { GitHubMeta, JWTPayload } from "./types";
 import { apiEndpoint } from "./const";
 
-export let githubMeta: GitHubMeta;
-
-export const fetchGitHubMeta = async () => {
+export const fetchGitHubMeta = async (): Promise<GitHubMeta> => {
   const res = await fetch(`${apiEndpoint}meta/github-app`, {
     method: "GET",
   });
@@ -12,7 +10,7 @@ export const fetchGitHubMeta = async () => {
     throw res;
   }
 
-  if (!githubMeta) githubMeta = (await res.json()).data;
+  return (await res.json()).data;
 };
 
 export const handleOAuthToken = () => {

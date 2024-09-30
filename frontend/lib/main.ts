@@ -2,7 +2,7 @@ import "./style.css";
 import iconComment from "iconify/comment-outline-rounded";
 import iconClose from "iconify/close";
 import { setApiEndpoint } from "./const";
-import { fetchGitHubMeta, handleOAuthToken } from "./auth";
+import { handleOAuthToken } from "./auth";
 import {
   closeContextMenu,
   createContextMenu,
@@ -71,7 +71,6 @@ export function setupReview(
   resetCommentsCache();
 
   updateAvailableComments();
-  fetchGitHubMeta();
 
   if (globalInitialized) {
     closeCommentsPanel();

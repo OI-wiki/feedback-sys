@@ -4,7 +4,7 @@ import iconEdit from "iconify/edit";
 import iconDelete from "iconify/delete";
 import iconInfoOutlineRounded from "iconify/info-outline-rounded";
 import { Comment } from "../types";
-import { getJWT, decodeJWT, logout, githubMeta } from "../auth";
+import { getJWT, decodeJWT, logout, fetchGitHubMeta } from "../auth";
 import { apiEndpoint } from "../const";
 import { groupBy, dateTimeFormatter } from "../util";
 
@@ -691,10 +691,7 @@ export const renderComments = async (comments: Comment[]) => {
             break;
           }
           case "login": {
-            if (!githubMeta) {
-              console.log("githubMeta not ready");
-              return;
-            }
+            const githubMeta = await fetchGitHubMeta();
             window.location.href = `https://github.com/login/oauth/authorize?client_id=${githubMeta.client_id}&state=${encodeURIComponent(JSON.stringify({ redirect: window.location.href }))}`;
             break;
           }
