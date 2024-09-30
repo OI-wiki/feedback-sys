@@ -8,9 +8,11 @@
   0% {
     background-color: rgba(255, 255, 255, 0);
   }
+
   50% {
     background-color: var(--review-variant-color);
   }
+
   100% {
     background-color: rgba(255, 255, 255, 0);
   }
@@ -50,9 +52,11 @@
   height: 1em;
   vertical-align: 0;
 }
+
 .iconify-icon.iconify-inline {
   vertical-align: -0.125em;
 }
+
 .review_dark_mode .iconify-icon {
   color: var(--review-text-color);
 }
@@ -78,16 +82,20 @@
   cursor: pointer;
 }
 
-[data-review-enabled] {
-  position: relative;
-  &::after {
-    content: "";
-    position: absolute;
-    top: 30px;
-    left: 100%;
-    width: 30px;
-    height: calc(100% - 30px);
-    clip-path: polygon(0 0, 0 100%, 100% 0);
+@media not (--mobile) {
+  [data-review-enabled] {
+    position: relative;
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 30px;
+      left: 100%;
+      width: 30px;
+      height: calc(100% - 30px);
+      clip-path: polygon(0 0, 0 100%, 100% 0);
+      fill: red;
+    }
   }
 }
 
