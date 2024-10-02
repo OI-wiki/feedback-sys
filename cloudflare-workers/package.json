@@ -1,6 +1,6 @@
 {
 	"name": "cloudflare-workers",
-	"version": "0.5.9",
+	"version": "0.5.10",
 	"private": true,
 	"scripts": {
 		"deploy": "wrangler deploy",
