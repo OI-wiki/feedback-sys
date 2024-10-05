@@ -684,275 +684,283 @@ export const renderComments = async (comments: Comment[]) => {
           }
         };
 
-        switch (target?.dataset.action) {
-          case "copy_permalink": {
-            target.dataset.tag = "using";
-            const commentEl = container.querySelector(
-              `.comment:has([data-tag="using"][data-action="${target?.dataset.action}"])`,
-            ) as HTMLDivElement;
-            delete target.dataset.tag;
-            const id = commentEl?.dataset?.id;
-            if (id == undefined) return;
+        async function handleAction(action: string | undefined) {
+          switch (action) {
+            case "copy_permalink": {
+              target.dataset.tag = "using";
+              const commentEl = container.querySelector(
+                `.comment:has([data-tag="using"][data-action="${target?.dataset.action}"])`,
+              ) as HTMLDivElement;
+              delete target.dataset.tag;
+              const id = commentEl?.dataset?.id;
+              if (id == undefined) return;
 
-            const permalink = new URL(window.location.href);
-            permalink.hash = `#comment-${id}`;
-            await navigator.clipboard.writeText(permalink.toString());
-            notification.textContent = "已复制评论链接地址";
-            break;
-          }
-          case "login": {
-            const githubMeta = await fetchGitHubMeta();
-            window.location.href = `https://github.com/login/oauth/authorize?client_id=${githubMeta.client_id}&state=${encodeURIComponent(JSON.stringify({ redirect: window.location.href }))}`;
-            break;
-          }
-          case "logout": {
-            logout();
-            window.location.reload();
-            break;
-          }
-          case "cancel": {
-            textarea.disabled = false;
-            textarea.value = "";
-            notification.textContent = "";
-            _updateTextareaHeight(textarea);
-            break;
-          }
-          case "submit": {
-            textarea.disabled = true;
-
-            if (!textarea.checkValidity()) {
-              notification.textContent = "请填写评论内容";
+              const permalink = new URL(window.location.href);
+              permalink.hash = `#comment-${id}`;
+              await navigator.clipboard.writeText(permalink.toString());
+              notification.textContent = "已复制评论链接地址";
+              break;
+            }
+            case "login": {
+              const githubMeta = await fetchGitHubMeta();
+              window.location.href = `https://github.com/login/oauth/authorize?client_id=${githubMeta.client_id}&state=${encodeURIComponent(JSON.stringify({ redirect: window.location.href }))}`;
+              break;
+            }
+            case "logout": {
+              logout();
+              window.location.reload();
+              break;
+            }
+            case "cancel": {
               textarea.disabled = false;
-              return;
-            }
-
-            notification.textContent = "";
-            const newSubmitButton = commentsPanel.querySelector(
-              "[data-review-selected] button[data-action='submit']",
-            ) as HTMLButtonElement;
-
-            if (newSubmitButton) {
-              newSubmitButton.disabled = true;
-            }
-
-            try {
-              await submitComment({
-                offsets: [
-                  parseInt(selectedOffset!.dataset.originalDocumentStart!),
-                  parseInt(selectedOffset!.dataset.originalDocumentEnd!),
-                ],
-                content: textarea.value,
-                onPendingFulfilled: async () => {
-                  await openCommentsPanel();
-                },
-              });
-
               textarea.value = "";
               notification.textContent = "";
-            } catch (error) {
-              _handleError(error);
-            } finally {
-              await openCommentsPanel();
-
-              const newNotification = commentsPanel.querySelector(
-                "[data-review-selected] .comment_actions_notification",
-              );
-              const newTextArea = commentsPanel.querySelector(
-                "[data-review-selected] .comment_actions_panel textarea",
-              ) as HTMLTextAreaElement;
-
-              if (newNotification) {
-                newNotification.textContent = notification.textContent;
-              }
-              if (newTextArea) {
-                newTextArea.value = textarea.value;
-              }
+              _updateTextareaHeight(textarea);
+              break;
             }
+            case "submit": {
+              textarea.disabled = true;
 
-            break;
-          }
-          case "modify": {
-            container
-              .querySelector(
-                `.comment[data-id="${container.dataset.modifingId}"]`,
-              )
-              ?.classList.remove("comment_pending");
+              if (!textarea.checkValidity()) {
+                notification.textContent = "请填写评论内容";
+                textarea.disabled = false;
+                return;
+              }
 
-            target.dataset.tag = "using";
-            const commentEl = container.querySelector(
-              `.comment:has([data-tag="using"][data-action="${target?.dataset.action}"])`,
-            ) as HTMLDivElement;
-            delete target.dataset.tag;
-            const id = commentEl?.dataset?.id;
-            if (id == undefined) return;
-
-            commentEl?.classList.add("comment_pending");
-            commentActionsModify.style.display = "";
-            container.dataset.modifingId = id;
-
-            textarea.value =
-              commentsCache?.find((it) => it.id === parseInt(id))?.comment ??
-              "";
-
-            const footer = container.querySelector(
-              ".comments_group_footer",
-            ) as HTMLDivElement;
-            footer.style.display = "block";
-            _updateTextareaHeight(textarea);
-            footer.style.display = "";
-            break;
-          }
-          case "modify_cancel": {
-            container
-              .querySelector(
-                `.comment[data-id="${container.dataset.modifingId}"]`,
-              )
-              ?.classList.remove("comment_pending");
-            commentActionsModify.style.display = "none";
-            delete container.dataset.modifingId;
-            textarea.disabled = false;
-            textarea.value = "";
-            notification.textContent = "";
-
-            _updateTextareaHeight(textarea);
-            break;
-          }
-          case "modify_submit": {
-            const id = container.dataset.modifingId;
-            if (id == undefined) return;
-
-            container
-              .querySelectorAll<HTMLButtonElement>(
-                `.comment[data-id="${id}"] .comment_header .comment_actions`,
-              )
-              .forEach((it) => {
-                it.disabled = true;
-              });
-
-            try {
-              await modifyComment({
-                id: parseInt(id),
-                comment: textarea.value,
-                onPendingFulfilled: async () => {
-                  await openCommentsPanel();
-                },
-              });
-
-              textarea.value = "";
               notification.textContent = "";
-            } catch (error) {
-              _handleError(error);
-            } finally {
-              await openCommentsPanel();
+              const newSubmitButton = commentsPanel.querySelector(
+                "[data-review-selected] button[data-action='submit']",
+              ) as HTMLButtonElement;
 
-              const newNotification = commentsPanel.querySelector(
-                "[data-review-selected] .comment_actions_notification",
-              );
-              const newTextArea = commentsPanel.querySelector(
-                "[data-review-selected] .comment_actions_panel textarea",
-              ) as HTMLTextAreaElement;
-
-              if (newNotification) {
-                newNotification.textContent = notification.textContent;
+              if (newSubmitButton) {
+                newSubmitButton.disabled = true;
               }
-              if (newTextArea) {
-                newTextArea.value = textarea.value;
-              }
-            }
 
-            break;
-          }
-          case "delete": {
-            container
-              .querySelector(
-                `.comment[data-id="${container.dataset.deletingId}"]`,
-              )
-              ?.classList.remove("comment_pending");
-
-            target.dataset.tag = "using";
-            const commentEl = container.querySelector(
-              `.comment:has([data-tag="using"][data-action="${target?.dataset.action}"])`,
-            ) as HTMLDivElement;
-            delete target.dataset.tag;
-            const id = commentEl?.dataset?.id;
-            if (id == undefined) return;
-
-            commentEl?.classList.add("comment_pending");
-            commentActionsDelete.style.display = "";
-            container.dataset.deletingId = id;
-            textarea.disabled = true;
-            textarea.value = "确实要删除该评论吗？";
-            break;
-          }
-          case "delete_cancel": {
-            container
-              .querySelector(
-                `.comment[data-id="${container.dataset.deletingId}"]`,
-              )
-              ?.classList.remove("comment_pending");
-            commentActionsDelete.style.display = "none";
-            delete container.dataset.deletingId;
-            textarea.disabled = false;
-            textarea.value = "";
-            notification.textContent = "";
-            break;
-          }
-          case "delete_confirm": {
-            const id = container.dataset.deletingId;
-            if (id == undefined) return;
-
-            textarea.value = "";
-
-            container
-              .querySelectorAll<HTMLButtonElement>(
-                `.comment[data-id="${id}"] .comment_header .comment_actions`,
-              )
-              .forEach((it) => {
-                it.disabled = true;
-              });
-
-            _deleteComment({ id: parseInt(id) })
-              .catch(_handleError)
-              .finally(() => {
-                openCommentsPanel().then(() => {
-                  const newNotification = commentsPanel.querySelector(
-                    "[data-review-selected] .comment_actions_notification",
-                  );
-                  const newTextArea = commentsPanel.querySelector(
-                    "[data-review-selected] .comment_actions_panel textarea",
-                  ) as HTMLTextAreaElement;
-                  if (newNotification) {
-                    newNotification.textContent = notification.textContent;
-                  }
-                  if (newTextArea) {
-                    newTextArea.value = textarea.value;
-                  }
+              try {
+                await submitComment({
+                  offsets: [
+                    parseInt(selectedOffset!.dataset.originalDocumentStart!),
+                    parseInt(selectedOffset!.dataset.originalDocumentEnd!),
+                  ],
+                  content: textarea.value,
+                  onPendingFulfilled: async () => {
+                    await openCommentsPanel();
+                  },
                 });
-              });
 
-            openCommentsPanel().then(() => {
-              const newNotification = commentsPanel.querySelector(
-                "[data-review-selected] .comment_actions_notification",
-              );
-              const newDeleteButton = commentsPanel.querySelector(
-                `.comment[data-id="${id}"] button[data-action="delete"]`,
-              ) as HTMLButtonElement;
-              const newModifyButton = commentsPanel.querySelector(
-                `.comment[data-id="${id}"] button[data-action="modify"]`,
-              ) as HTMLButtonElement;
-              if (newNotification) {
-                newNotification.textContent = notification.textContent;
+                textarea.value = "";
+                notification.textContent = "";
+              } catch (error) {
+                _handleError(error);
+              } finally {
+                await openCommentsPanel();
+
+                const newNotification = commentsPanel.querySelector(
+                  "[data-review-selected] .comment_actions_notification",
+                );
+                const newTextArea = commentsPanel.querySelector(
+                  "[data-review-selected] .comment_actions_panel textarea",
+                ) as HTMLTextAreaElement;
+
+                if (newNotification) {
+                  newNotification.textContent = notification.textContent;
+                }
+                if (newTextArea) {
+                  newTextArea.value = textarea.value;
+                }
               }
-              if (newDeleteButton) {
-                newDeleteButton.disabled = true;
+
+              break;
+            }
+            case "modify": {
+              handleAction("delete_cancel");
+
+              container
+                .querySelector(
+                  `.comment[data-id="${container.dataset.modifingId}"]`,
+                )
+                ?.classList.remove("comment_pending");
+
+              target.dataset.tag = "using";
+              const commentEl = container.querySelector(
+                `.comment:has([data-tag="using"][data-action="${target?.dataset.action}"])`,
+              ) as HTMLDivElement;
+              delete target.dataset.tag;
+              const id = commentEl?.dataset?.id;
+              if (id == undefined) return;
+
+              commentEl?.classList.add("comment_pending");
+              commentActionsModify.style.display = "";
+              container.dataset.modifingId = id;
+
+              textarea.value =
+                commentsCache?.find((it) => it.id === parseInt(id))?.comment ??
+                "";
+
+              const footer = container.querySelector(
+                ".comments_group_footer",
+              ) as HTMLDivElement;
+              footer.style.display = "block";
+              _updateTextareaHeight(textarea);
+              footer.style.display = "";
+              break;
+            }
+            case "modify_cancel": {
+              container
+                .querySelector(
+                  `.comment[data-id="${container.dataset.modifingId}"]`,
+                )
+                ?.classList.remove("comment_pending");
+              commentActionsModify.style.display = "none";
+              delete container.dataset.modifingId;
+              textarea.disabled = false;
+              textarea.value = "";
+              notification.textContent = "";
+
+              _updateTextareaHeight(textarea);
+              break;
+            }
+            case "modify_submit": {
+              const id = container.dataset.modifingId;
+              if (id == undefined) return;
+
+              container
+                .querySelectorAll<HTMLButtonElement>(
+                  `.comment[data-id="${id}"] .comment_header .comment_actions`,
+                )
+                .forEach((it) => {
+                  it.disabled = true;
+                });
+
+              try {
+                await modifyComment({
+                  id: parseInt(id),
+                  comment: textarea.value,
+                  onPendingFulfilled: async () => {
+                    await openCommentsPanel();
+                  },
+                });
+
+                textarea.value = "";
+                notification.textContent = "";
+              } catch (error) {
+                _handleError(error);
+              } finally {
+                await openCommentsPanel();
+
+                const newNotification = commentsPanel.querySelector(
+                  "[data-review-selected] .comment_actions_notification",
+                );
+                const newTextArea = commentsPanel.querySelector(
+                  "[data-review-selected] .comment_actions_panel textarea",
+                ) as HTMLTextAreaElement;
+
+                if (newNotification) {
+                  newNotification.textContent = notification.textContent;
+                }
+                if (newTextArea) {
+                  newTextArea.value = textarea.value;
+                }
               }
-              if (newModifyButton) {
-                newModifyButton.disabled = true;
-              }
-            });
-            break;
+
+              break;
+            }
+            case "delete": {
+              handleAction("modify_cancel");
+
+              container
+                .querySelector(
+                  `.comment[data-id="${container.dataset.deletingId}"]`,
+                )
+                ?.classList.remove("comment_pending");
+
+              target.dataset.tag = "using";
+              const commentEl = container.querySelector(
+                `.comment:has([data-tag="using"][data-action="${target?.dataset.action}"])`,
+              ) as HTMLDivElement;
+              delete target.dataset.tag;
+              const id = commentEl?.dataset?.id;
+              if (id == undefined) return;
+
+              commentEl?.classList.add("comment_pending");
+              commentActionsDelete.style.display = "";
+              container.dataset.deletingId = id;
+              textarea.disabled = true;
+              textarea.value = "确实要删除该评论吗？";
+              break;
+            }
+            case "delete_cancel": {
+              container
+                .querySelector(
+                  `.comment[data-id="${container.dataset.deletingId}"]`,
+                )
+                ?.classList.remove("comment_pending");
+              commentActionsDelete.style.display = "none";
+              delete container.dataset.deletingId;
+              textarea.disabled = false;
+              textarea.value = "";
+              notification.textContent = "";
+              break;
+            }
+            case "delete_confirm": {
+              const id = container.dataset.deletingId;
+              if (id == undefined) return;
+
+              textarea.value = "";
+
+              container
+                .querySelectorAll<HTMLButtonElement>(
+                  `.comment[data-id="${id}"] .comment_header .comment_actions`,
+                )
+                .forEach((it) => {
+                  it.disabled = true;
+                });
+
+              _deleteComment({ id: parseInt(id) })
+                .catch(_handleError)
+                .finally(() => {
+                  openCommentsPanel().then(() => {
+                    const newNotification = commentsPanel.querySelector(
+                      "[data-review-selected] .comment_actions_notification",
+                    );
+                    const newTextArea = commentsPanel.querySelector(
+                      "[data-review-selected] .comment_actions_panel textarea",
+                    ) as HTMLTextAreaElement;
+                    if (newNotification) {
+                      newNotification.textContent = notification.textContent;
+                    }
+                    if (newTextArea) {
+                      newTextArea.value = textarea.value;
+                    }
+                  });
+                });
+
+              openCommentsPanel().then(() => {
+                const newNotification = commentsPanel.querySelector(
+                  "[data-review-selected] .comment_actions_notification",
+                );
+                const newDeleteButton = commentsPanel.querySelector(
+                  `.comment[data-id="${id}"] button[data-action="delete"]`,
+                ) as HTMLButtonElement;
+                const newModifyButton = commentsPanel.querySelector(
+                  `.comment[data-id="${id}"] button[data-action="modify"]`,
+                ) as HTMLButtonElement;
+                if (newNotification) {
+                  newNotification.textContent = notification.textContent;
+                }
+                if (newDeleteButton) {
+                  newDeleteButton.disabled = true;
+                }
+                if (newModifyButton) {
+                  newModifyButton.disabled = true;
+                }
+              });
+              break;
+            }
           }
         }
+
+        handleAction(target?.dataset.action);
       });
     }
 
