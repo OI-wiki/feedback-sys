@@ -24,6 +24,7 @@
   --review-variant-color: #faedc2;
   --review-variant-bg-color: #f0f0f0;
   --review-variant-bg-color-lighter: #d4d4d8;
+  --review-error-bg-color: #ff4500;
   --review-border-color: #dee0e3;
 
   --review-text-color: #000;
@@ -38,6 +39,7 @@
   --review-variant-color: #c09a2682;
   --review-variant-bg-color: #2c2c2c;
   --review-variant-bg-color-lighter: #3a3a3a;
+  --review-error-bg-color: #dc143c;
   --review-border-color: #444;
 
   --review-text-color: #e2e2e2;
@@ -549,6 +551,13 @@
     display: none;
   }
 
+  &
+    .comment_actions_panel
+    .comment_actions_delete:not([style*="display: none"])
+    ~ .comment_actions.comment_actions_reply {
+    display: none;
+  }
+
   & .comment_actions_footer {
     display: flex;
     flex-direction: row;
@@ -606,6 +615,10 @@
 
       &.comment_actions_item_btn_primary {
         background-color: var(--review-primary-color);
+      }
+
+      &.comment_actions_item_btn_error {
+        background-color: var(--review-error-bg-color);
       }
 
       &:hover {

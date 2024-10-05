@@ -418,6 +418,10 @@ export const renderComments = async (comments: Comment[]) => {
               <button class="comment_actions_item comment_actions_item_btn" data-action="modify_cancel">取消</button>
               <button class="comment_actions_item comment_actions_item_btn comment_actions_item_btn_primary" data-action="modify_submit">修改</button>
             </div>
+            <div class="comment_actions comment_actions_delete">
+              <button class="comment_actions_item comment_actions_item_btn" data-action="delete_cancel">取消</button>
+              <button class="comment_actions_item comment_actions_item_btn comment_actions_item_btn_error" data-action="delete_confirm">删除</button>
+            </div>
             <div class="comment_actions comment_actions_reply">
               <button class="comment_actions_item comment_actions_item_btn" data-action="cancel">取消</button>
               <button class="comment_actions_item comment_actions_item_btn comment_actions_item_btn_primary" data-action="submit">提交</button>
@@ -465,6 +469,12 @@ export const renderComments = async (comments: Comment[]) => {
     ) as HTMLDivElement;
 
     commentActionsModify.style.display = "none";
+
+    const commentActionsDelete = container.querySelector(
+      ".comment_actions_delete",
+    ) as HTMLDivElement;
+
+    commentActionsDelete.style.display = "none";
 
     container.addEventListener("mouseenter", () => {
       if (paragraph) {
@@ -845,13 +855,45 @@ export const renderComments = async (comments: Comment[]) => {
             break;
           }
           case "delete": {
+            container
+              .querySelector(
+                `.comment[data-id="${container.dataset.deletingId}"]`,
+              )
+              ?.classList.remove("comment_pending");
+
             target.dataset.tag = "using";
             const commentEl = container.querySelector(
               `.comment:has([data-tag="using"][data-action="${target?.dataset.action}"])`,
             ) as HTMLDivElement;
             delete target.dataset.tag;
-            const id = commentEl.dataset?.id;
+            const id = commentEl?.dataset?.id;
             if (id == undefined) return;
+
+            commentEl?.classList.add("comment_pending");
+            commentActionsDelete.style.display = "";
+            container.dataset.deletingId = id;
+            textarea.disabled = true;
+            textarea.value = "确实要删除该评论吗？";
+            break;
+          }
+          case "delete_cancel": {
+            container
+              .querySelector(
+                `.comment[data-id="${container.dataset.deletingId}"]`,
+              )
+              ?.classList.remove("comment_pending");
+            commentActionsDelete.style.display = "none";
+            delete container.dataset.deletingId;
+            textarea.disabled = false;
+            textarea.value = "";
+            notification.textContent = "";
+            break;
+          }
+          case "delete_confirm": {
+            const id = container.dataset.deletingId;
+            if (id == undefined) return;
+
+            textarea.value = "";
 
             _deleteComment({ id: parseInt(id) })
               .catch(_handleError)
