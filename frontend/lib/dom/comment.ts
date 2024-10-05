@@ -821,6 +821,14 @@ export const renderComments = async (comments: Comment[]) => {
             const id = container.dataset.modifingId;
             if (id == undefined) return;
 
+            container
+              .querySelectorAll<HTMLButtonElement>(
+                `.comment[data-id="${id}"] .comment_header .comment_actions`,
+              )
+              .forEach((it) => {
+                it.disabled = true;
+              });
+
             try {
               await modifyComment({
                 id: parseInt(id),
@@ -894,6 +902,14 @@ export const renderComments = async (comments: Comment[]) => {
             if (id == undefined) return;
 
             textarea.value = "";
+
+            container
+              .querySelectorAll<HTMLButtonElement>(
+                `.comment[data-id="${id}"] .comment_header .comment_actions`,
+              )
+              .forEach((it) => {
+                it.disabled = true;
+              });
 
             _deleteComment({ id: parseInt(id) })
               .catch(_handleError)
