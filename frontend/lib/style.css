@@ -63,8 +63,15 @@
 
 :--review {
   &[data-review-has-comments] {
-    text-decoration: underline;
-    text-decoration-color: var(--review-secondary-color);
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -1em;
+      width: 3px;
+      height: 100%;
+      background-color: var(--review-primary-color);
+    }
   }
 
   &[data-review-focused] {
@@ -72,9 +79,17 @@
   }
 
   &[data-review-selected] {
-    text-decoration: underline;
-    text-decoration-color: var(--review-secondary-color);
     background-color: var(--review-variant-color);
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -1em;
+      width: 3px;
+      height: 100%;
+      background-color: var(--review-primary-color);
+    }
   }
 }
 
