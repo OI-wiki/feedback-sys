@@ -45,12 +45,12 @@
   --review-error-bg-color: #dc143c;
   --review-border-color: #444;
 
-  --review-text-color: hsla(225deg,15%,90%,0.82);
-  --review-secondary-text-color: hsla(225deg,15%,90%,0.56);
+  --review-text-color: hsla(225deg, 15%, 90%, 0.82);
+  --review-secondary-text-color: hsla(225deg, 15%, 90%, 0.56);
   --review-muted-text-color: #777777;
   --review-muted-highlight-color: #ff8c00aa;
   --review-error-text-color: #ff0000;
-  --review-on-text-color: rgb(30,33,41);
+  --review-on-text-color: rgb(30, 33, 41);
 }
 
 .iconify-icon {
