@@ -26,9 +26,12 @@
   --review-variant-bg-color-lighter: #d4d4d8;
   --review-error-bg-color: #ff4500;
   --review-border-color: #dee0e3;
+  --review-shadow-color: rgba(31, 35, 41, 0.1);
 
   --review-text-color: #000;
   --review-secondary-text-color: #52525b;
+  --review-muted-text-color: #cccccc;
+  --review-muted-highlight-color: #ffc60a;
   --review-error-text-color: #ff0000;
   --review-on-text-color: #fff;
 }
@@ -42,10 +45,12 @@
   --review-error-bg-color: #dc143c;
   --review-border-color: #444;
 
-  --review-text-color: #e2e2e2;
-  --review-secondary-text-color: #d4d4d8;
+  --review-text-color: hsla(225deg, 15%, 90%, 0.82);
+  --review-secondary-text-color: hsla(225deg, 15%, 90%, 0.56);
+  --review-muted-text-color: #777777;
+  --review-muted-highlight-color: #ff8c00aa;
   --review-error-text-color: #ff0000;
-  --review-on-text-color: #1e1e1e;
+  --review-on-text-color: rgb(30, 33, 41);
 }
 
 .iconify-icon {
@@ -73,6 +78,8 @@
       width: 3px;
       height: 100%;
       background-color: var(--review-primary-color);
+      border-radius: 3px;
+      opacity: 50%;
     }
   }
 
@@ -146,7 +153,7 @@
     transform: translateX(-50%);
     background-color: var(--review-variant-bg-color);
 
-    box-shadow: 0 8px 16px rgba(31, 35, 41, 0.1);
+    box-shadow: 0 8px 16px var(--review-shadow-color);
   }
 
   color: var(--review-text-color);
@@ -203,6 +210,8 @@
   border-bottom: 1px solid var(--review-border-color);
   border-left: 1px solid var(--review-border-color);
   border-right: 1px solid var(--review-border-color);
+  border-radius: 0.5em 0 0 0.5em;
+  box-shadow: -8px 0 16px var(--review-shadow-color);
 
   color: var(--review-text-color);
 
@@ -219,12 +228,15 @@
     height: 100%;
 
     overflow: scroll;
+    box-shadow: none;
+    border-radius: 0;
   }
 
   overflow-y: auto;
 
   &.review_hidden {
     transform: translateX(100%);
+    box-shadow: none;
   }
 
   & .panel_header {
@@ -236,7 +248,6 @@
 
     padding: 8px 16px;
 
-    border-top: 1px solid var(--review-border-color);
     border-bottom: 1px solid var(--review-border-color);
 
     background-color: var(--review-on-text-color);
@@ -261,12 +272,12 @@
     text-align: center;
     font-size: 12px;
 
-    color: var(--review-secondary-text-color);
+    color: var(--review-muted-text-color);
 
     user-select: none;
 
     & a {
-      color: var(--review-primary-color);
+      color: var(--review-muted-highlight-color);
     }
   }
 
@@ -294,7 +305,7 @@
 
     border: 1px solid var(--review-border-color);
     border-radius: 6px;
-    box-shadow: 0 8px 16px rgba(31, 35, 41, 0.1);
+    box-shadow: 0 8px 16px var(--review-shadow-color);
 
     &[data-review-selected]::before {
       content: "";
