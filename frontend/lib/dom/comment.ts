@@ -6,7 +6,7 @@ import iconInfoOutlineRounded from "iconify/info-outline-rounded";
 import { Comment } from "../types";
 import { getJWT, decodeJWT, logout, fetchGitHubMeta } from "../auth";
 import { apiEndpoint } from "../const";
-import { groupBy, dateTimeFormatter } from "../util";
+import { groupBy, dateTimeFormatter, isReallyMobile } from "../util";
 
 let selectedOffset: HTMLElement | null = null;
 
@@ -123,7 +123,10 @@ export const selectOffsetParagraph = async ({
     selectedOffset = el;
   }
 
-  if (selectedOffset?.dataset.reviewHasComments || forceOpenCommentsPanel) {
+  if (
+    (!isReallyMobile() && selectedOffset?.dataset.reviewHasComments) ||
+    forceOpenCommentsPanel
+  ) {
     delete selectedOffset.dataset.reviewFocused;
     selectedOffset.dataset.reviewSelected = "true";
     // 只有在点击评论按钮时才会 focus 到评论框，这里 forceOpenCommentsPanel === true 就等价于点击评论按钮
