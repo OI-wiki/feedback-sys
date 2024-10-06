@@ -17,3 +17,9 @@ export const dateTimeFormatter = new Intl.DateTimeFormat("zh-CN", {
   dateStyle: "short",
   timeStyle: "short",
 });
+
+export function isReallyMobile() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent,
+  );
+}
