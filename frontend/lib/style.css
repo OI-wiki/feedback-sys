@@ -78,6 +78,8 @@
       width: 3px;
       height: 100%;
       background-color: var(--review-primary-color);
+      border-radius: 3px;
+      opacity: 50%;
     }
   }
 
