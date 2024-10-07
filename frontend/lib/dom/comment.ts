@@ -6,7 +6,7 @@ import iconInfoOutlineRounded from "iconify/info-outline-rounded";
 import { Comment } from "../types";
 import { getJWT, decodeJWT, logout, fetchGitHubMeta } from "../auth";
 import { apiEndpoint } from "../const";
-import { groupBy, dateTimeFormatter, isReallyMobile } from "../util";
+import { groupBy, dateTimeFormatter, isMobileLike } from "../util";
 
 let selectedOffset: HTMLElement | null = null;
 
@@ -124,7 +124,7 @@ export const selectOffsetParagraph = async ({
   }
 
   if (
-    (!isReallyMobile() && selectedOffset?.dataset.reviewHasComments) ||
+    (!isMobileLike() && selectedOffset?.dataset.reviewHasComments) ||
     forceOpenCommentsPanel
   ) {
     delete selectedOffset.dataset.reviewFocused;
