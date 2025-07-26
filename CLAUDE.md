@@ -27,9 +27,9 @@ OI Wiki Feedback System is a three-part system for adding paragraph-level commen
 ### Python Markdown Extension
 ```bash
 cd python-markdown-extension
-rye sync          # Install dependencies
-rye build         # Build package
-rye run test      # Run tests
+uv sync           # Install dependencies
+uv build          # Build package
+uv run test       # Run tests
 python ./test/cli.py <file.md>  # Test CLI tool
 ```
 
@@ -50,6 +50,57 @@ yarn install      # Install dependencies
 yarn dev          # Start dev server (localhost:5173 with API proxy)
 yarn build        # Build for production
 ```
+
+## Release Process
+
+The OI Wiki Feedback System uses GitHub Actions for automated releases. All three components (Cloudflare Workers, Frontend, and Python extension) are published simultaneously when a new Git tag is created.
+
+### Automated Release Steps
+
+1. **Update version numbers** in all three components:
+   - `cloudflare-workers/package.json`
+   - `frontend/package.json` 
+   - `python-markdown-extension/pyproject.toml`
+
+2. **Test locally** (optional but recommended):
+   ```bash
+   # Cloudflare Workers
+   cd cloudflare-workers && yarn test
+   
+   # Frontend
+   cd frontend && yarn build
+   
+   # Python extension
+   cd python-markdown-extension && uv run test
+   ```
+
+3. **Commit version bump**:
+   ```bash
+   git add .
+   git commit -m "chore: bump to vX.Y.Z"
+   git tag vX.Y.Z
+   git push origin master --tags
+   ```
+
+4. **GitHub Actions will automatically**:
+   - Deploy Cloudflare Workers (triggered by tag push)
+   - Publish Frontend to npm (triggered by tag push)
+   - Publish Python extension to PyPI (triggered by tag push)
+   - Upload build artifacts
+
+### CI/CD Workflows
+
+- **Deploy cloudflare-workers**: `.github/workflows/deploy-cloudflare-workers.yml`
+- **Publish frontend**: `.github/workflows/publish-frontend.yml`
+- **Publish python-markdown-extension**: `.github/workflows/publish-python-markdown-extension.yml`
+
+All workflows trigger on tag pushes (`*`) and include both deployment and artifact upload steps.
+
+### Requirements
+
+- Cloudflare Workers: Requires `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` secrets
+- Frontend: Requires `NPM_TOKEN` secret for npm publishing
+- Python extension: Uses OIDC authentication for PyPI publishing (no manual token needed)
 
 ## Key Configuration
 

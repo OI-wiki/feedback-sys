@@ -14,11 +14,11 @@ requires-python = ">= 3.8"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.rye]
-managed = true
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "pygments>=2.18.0",
     "pymdown-extensions>=10.8.1",
+    "ruff>=0.12.5",
 ]
 
 [tool.hatch.metadata]
@@ -27,8 +27,8 @@ allow-direct-references = true
 [tool.hatch.build.targets.wheel]
 packages = ["src/python_markdown_document_offsets_injection_extension"]
 
-[tool.rye.scripts]
-test = "python ./test"
+[tool.uv]
+managed = true
 
 [project.entry-points."markdown.extensions"]
 document-offsets-injection = "python_markdown_document_offsets_injection_extension.extension:MainExtension"

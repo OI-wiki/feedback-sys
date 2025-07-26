@@ -18,15 +18,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         name: Checkout Repo
-      - uses: eifinger/setup-rye@v3
-        name: Setup Rye
+      - uses: astral-sh/setup-uv@v6
+        name: Setup uv
         with:
           enable-cache: true
-          working-directory: python-markdown-extension
-      - run: rye sync
+      - run: uv sync
         name: Install Dependencies
-      - run: rye build
+        working-directory: python-markdown-extension
+      - run: uv build
         name: Build Package
+        working-directory: python-markdown-extension
       - uses: pypa/gh-action-pypi-publish@release/v1
         name: Publish package distributions to PyPI
         with:
@@ -42,15 +43,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         name: Checkout Repo
-      - uses: eifinger/setup-rye@v3
-        name: Setup Rye
+      - uses: astral-sh/setup-uv@v6
+        name: Setup uv
         with:
           enable-cache: true
-          working-directory: python-markdown-extension
-      - run: rye sync
+      - run: uv sync
         name: Install Dependencies
-      - run: rye build
+        working-directory: python-markdown-extension
+      - run: uv build
         name: Build Package
+        working-directory: python-markdown-extension
       - uses: actions/upload-artifact@v4
         with:
           name: python-markdown-extension
