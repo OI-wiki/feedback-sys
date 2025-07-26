@@ -15,15 +15,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         name: Checkout Repo
-      - uses: eifinger/setup-rye@v3
-        name: Setup Rye
+      - uses: astral-sh/setup-uv@v6
+        name: Setup uv
         with:
           enable-cache: true
-          working-directory: python-markdown-extension
-      - run: rye sync
+      - run: uv sync
         name: Install Dependencies
-      - run: rye fmt --check
+        working-directory: python-markdown-extension
+      - run: uv run ruff format --check
         name: Check Format
+        working-directory: python-markdown-extension
   test:
     name: Test PR
     runs-on: ubuntu-latest
@@ -33,12 +34,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         name: Checkout Repo
-      - uses: eifinger/setup-rye@v3
-        name: Setup Rye
+      - uses: astral-sh/setup-uv@v6
+        name: Setup uv
         with:
           enable-cache: true
-          working-directory: python-markdown-extension
-      - run: rye sync
+      - run: uv sync
         name: Install Dependencies
-      - run: rye run test
+        working-directory: python-markdown-extension
+      - run: uv run test
         name: Run Tests
+        working-directory: python-markdown-extension
