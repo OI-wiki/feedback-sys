@@ -402,7 +402,7 @@ export const renderComments = async (comments: Comment[]) => {
 
     container.innerHTML = `
       <div class="comments_group_header">
-        <span class="comments_group_text_content">${content}</span>
+        <span class="comments_group_text_content"></span>
       </div>
       <div class="comments_group_main"></div>
       <div class="comments_group_footer">
@@ -433,6 +433,9 @@ export const renderComments = async (comments: Comment[]) => {
         </div>
       </div>
     `.trim();
+
+    container.querySelector(".comments_group_text_content")!.textContent =
+      content;
 
     const _updateTextareaHeight = (textarea: HTMLTextAreaElement) => {
       textarea.style.height = "5px";
