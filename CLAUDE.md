@@ -22,15 +22,22 @@ OI Wiki Feedback System is a three-part system for adding paragraph-level commen
 3. Comments are stored in Cloudflare D1 database with path + offset as keys
 4. GitHub OAuth for user authentication, with Telegram notifications for new comments
 
+### Database Schema (cloudflare-workers/schema.sql)
+- `pages`: Stores document paths
+- `offsets`: Maps document positions to page IDs
+- `commenters`: User information from OAuth providers
+- `comments`: Comment content with timestamps and relationships
+- `metas`: Key-value storage for system metadata
+
 ## Development Commands
 
 ### Python Markdown Extension
 ```bash
 cd python-markdown-extension
-uv sync           # Install dependencies
+uv sync           # Install dependencies with uv
 uv build          # Build package
-uv run test       # Run tests
-python ./test/cli.py <file.md>  # Test CLI tool
+uv run test       # Run tests (uses pytest)
+python ./test/cli.py <file.md>  # Test CLI tool with sample markdown
 ```
 
 ### Cloudflare Workers Backend
@@ -38,9 +45,10 @@ python ./test/cli.py <file.md>  # Test CLI tool
 cd cloudflare-workers
 yarn install      # Install dependencies
 yarn dev          # Start dev server (localhost:8787)
-yarn test         # Run tests
+yarn test         # Run tests with Vitest
 yarn deploy       # Deploy to Cloudflare
-wrangler secret put <KEY>  # Set secrets
+wrangler secret put <KEY>  # Set secrets for deployment
+wrangler d1 execute comments --file=schema.sql  # Initialize database
 ```
 
 ### Frontend
@@ -49,27 +57,46 @@ cd frontend
 yarn install      # Install dependencies
 yarn dev          # Start dev server (localhost:5173 with API proxy)
 yarn build        # Build for production
+yarn fmt          # Format code with Prettier
 ```
+
+## Testing
+
+### Backend Testing (Cloudflare Workers)
+- **Test framework**: Vitest with Cloudflare Workers testing utilities
+- **Test location**: `cloudflare-workers/test/index.spec.ts`
+- **Run tests**: `yarn test` from cloudflare-workers directory
+- **Test setup**: Requires environment variables in `.dev.vars` for local testing
+
+### Frontend Testing
+- **Testing approach**: Manual testing via development server
+- **Development server**: `yarn dev` starts Vite dev server with API proxy
+- **Build verification**: `yarn build` ensures production builds work correctly
+
+### Python Extension Testing
+- **Test framework**: pytest
+- **Test location**: `python-markdown-extension/test/`
+- **Run tests**: `uv run test` or `python -m pytest test/`
+- **CLI testing**: `python ./test/cli.py sample.md` for manual verification
 
 ## Release Process
 
-The OI Wiki Feedback System uses GitHub Actions for automated releases. All three components (Cloudflare Workers, Frontend, and Python extension) are published simultaneously when a new Git tag is created.
+The OI Wiki Feedback System uses GitHub Actions for automated releases. All three components are published simultaneously when a new Git tag is created.
 
 ### Automated Release Steps
-
 1. **Update version numbers** in all three components:
    - `cloudflare-workers/package.json`
-   - `frontend/package.json` 
+   - `frontend/package.json`
    - `python-markdown-extension/pyproject.toml`
 
-2. **Test locally** (optional but recommended):
+2. **Test locally** (recommended):
    ```bash
    # Cloudflare Workers
    cd cloudflare-workers && yarn test
-   
+
    # Frontend
    cd frontend && yarn build
-   
+
    # Python extension
    cd python-markdown-extension && uv run test
    ```
@@ -89,22 +116,17 @@ The OI Wiki Feedback System uses GitHub Actions for automated releases. All thre
    - Upload build artifacts
 
 ### CI/CD Workflows
-
 - **Deploy cloudflare-workers**: `.github/workflows/deploy-cloudflare-workers.yml`
 - **Publish frontend**: `.github/workflows/publish-frontend.yml`
 - **Publish python-markdown-extension**: `.github/workflows/publish-python-markdown-extension.yml`
+- **Format checking**: Additional workflows for code formatting validation
 
 All workflows trigger on tag pushes (`*`) and include both deployment and artifact upload steps.
-
-### Requirements
-
-- Cloudflare Workers: Requires `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` secrets
-- Frontend: Requires `NPM_TOKEN` secret for npm publishing
-- Python extension: Uses OIDC authentication for PyPI publishing (no manual token needed)
 
 ## Key Configuration
 
 ### Environment Variables (Cloudflare Workers)
+Required for development and deployment:
 - `ADMINISTRATOR_SECRET`: Admin authentication secret
 - `TELEGRAM_BOT_TOKEN`: Bot token for notifications
 - `TELEGRAM_CHAT_ID`: Chat ID for notifications
@@ -113,18 +135,46 @@ All workflows trigger on tag pushes (`*`) and include both deployment and artifa
 - `OAUTH_JWT_SECRET`: JWT signing secret
 - `GITHUB_ORG_ADMINISTRATOR_TEAM`: GitHub team for admin access
 
-### Database Schema
-See `cloudflare-workers/schema.sql` for D1 database structure
+### Development Setup
+1. **Backend**: Create `cloudflare-workers/.dev.vars` with environment variables
+2. **Frontend**: Configure API endpoint in development environment
+3. **Python**: Install extension and configure Markdown processing
 
-### Frontend Setup
+### Frontend Integration
 ```javascript
 import { setupReview } from 'oiwiki-feedback-sys-frontend'
-setupReview(document.getElementById('content'), { 
-  apiEndpoint: 'https://your-worker-domain.com' 
+setupReview(document.getElementById('content'), {
+  apiEndpoint: 'https://your-worker-domain.com'
 })
 ```
 
-## Testing
-- Backend: `yarn test` in cloudflare-workers/
-- Frontend: Manual testing via `yarn dev`
-- Python extension: `rye run test` or CLI testing
+## Development Tips
+
+### Local Development Setup
+1. **Start backend**: `cd cloudflare-workers && yarn dev`
+2. **Start frontend**: `cd frontend && yarn dev` (proxies to backend)
+3. **Test Python extension**: Use CLI tool or integrate with local Markdown processing
+
+### Database Management
+- **Initialize**: `wrangler d1 execute comments --file=schema.sql`
+- **Local development**: Use `--local` flag for local D1 database
+- **Production**: Use `--remote` flag for production database
+
+### Debugging
+- **Python extension**: Enable debug mode in extension configuration
+- **Backend**: Use `wrangler dev` with console logging
+- **Frontend**: Browser developer tools with Vite HMR
+
+## Dependencies
+
+### Package Managers
+- **Python**: uv (replaces rye)
+- **JavaScript**: Yarn 1.x
+- **Build systems**: Hatch (Python), Vite (frontend)
+
+### Key Libraries
+- **Backend**: itty-router, Cloudflare Workers types, JWT handling
+- **Frontend**: Vite, TypeScript, Iconify for icons
+- **Python**: markdown library with custom extension system
+
+This architecture enables paragraph-level commenting with proper source mapping, OAuth authentication, and real-time notifications.
