@@ -48,7 +48,6 @@ export function setupReview(
   for (let offset of offsets) {
     offset.dataset.reviewEnabled = "true";
     offset.addEventListener("click", (e) => {
-      e.stopPropagation(); // Prevent bubble so that the document click event won't be triggered
       selectOffsetParagraph({
         el: e.currentTarget as HTMLElement,
       });
