@@ -15,9 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        name: Set Node.js 20.x
+        name: Set Node.js 24.x
         with:
-          node-version: 20.x
+          node-version: 24.x
       - uses: borales/actions-yarn@v5
         name: Run install
         with:
@@ -38,9 +38,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        name: Set Node.js 20.x
+        name: Set Node.js 24.x
         with:
-          node-version: 20.x
+          node-version: 24.x
       - uses: borales/actions-yarn@v5
         name: Run install
         with:

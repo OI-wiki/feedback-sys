@@ -15,13 +15,14 @@ jobs:
         working-directory: ./frontend
     permissions:
       id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
         name: Checkout Repo
       - uses: actions/setup-node@v4
         name: Set Node.js 20.x
         with:
-          node-version: 20.x
+          node-version: 24.x
           registry-url: "https://registry.npmjs.org"
       - uses: borales/actions-yarn@v5
         name: Run install
@@ -35,8 +36,6 @@ jobs:
           dir: frontend
       - run: npm publish --provenance --access public
         name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
   upload-artifacts:
     name: Upload Artifacts
     runs-on: ubuntu-latest
@@ -45,13 +44,14 @@ jobs:
         working-directory: ./frontend
     permissions:
       id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
         name: Checkout Repo
       - uses: actions/setup-node@v4
-        name: Set Node.js 20.x
+        name: Set Node.js 24.x
         with:
-          node-version: 20.x
+          node-version: 24.x
       - uses: borales/actions-yarn@v5
         name: Run install
         with:
