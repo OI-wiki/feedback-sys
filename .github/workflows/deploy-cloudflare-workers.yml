@@ -29,7 +29,7 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           workingDirectory: "cloudflare-workers"
-          wranglerVersion: "3.78.10"
+          wranglerVersion: "4.46.0"
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           secrets: |
