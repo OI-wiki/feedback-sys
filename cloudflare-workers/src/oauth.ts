@@ -67,3 +67,16 @@ export async function getUserTeamMembership(
 
 	return (await response.json()) as GithubOrgMembershipResp;
 }
+
+export async function isUserBlockedByOrg(token: string, org: string, username: string): Promise<boolean> {
+	const response = await fetch(`https://api.github.com/orgs/${org}/blocks/${username}`, {
+		headers: {
+			Accept: 'application/vnd.github+json',
+			Authorization: `Bearer ${token}`,
+			'User-Agent': 'OI-Wiki Feedback System',
+		},
+	});
+
+	// 204 = 用户被屏蔽, 404 = 用户未被屏蔽
+	return response.status === 204;
+}

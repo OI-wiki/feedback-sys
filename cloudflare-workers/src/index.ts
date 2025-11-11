@@ -29,7 +29,7 @@ import { deleteComment, getComment, getUserOfComment, modifyComment, postComment
 import { setCommitHash, compareCommitHash, modifyComments, renameComments, sendCommentUpdateToTelegram } from './administration';
 import { matchCommentCache, purgeAllCommentCache, purgeCommentCache, putCommentCache } from './cache';
 import { signJWT } from './utils';
-import { getAccessToken, getUserInfo, getUserTeamMembership } from './oauth';
+import { getAccessToken, getUserInfo, getUserTeamMembership, isUserBlockedByOrg } from './oauth';
 import {
 	isAdmin,
 	isSameCommenter,
@@ -116,6 +116,21 @@ router.post('/comment/:path', async (req, env, ctx) => {
 	const token = await validateAndDecodeAuthorizationToken(env, req);
 	if (token === null) {
 		return error(401, 'Unauthorized');
+	}
+
+	// 检查 GitHub 用户是否被组织屏蔽
+	if (token.provider === 'github') {
+		const [org] = env.GITHUB_ORG_ADMINISTRATOR_TEAM.split('/');
+		try {
+			const isBlocked = await isUserBlockedByOrg(env.GITHUB_APP_CLIENT_SECRET, org, token.name);
+
+			if (isBlocked) {
+				return error(403, 'User is blocked from commenting');
+			}
+		} catch (error) {
+			// 如果 GitHub API 调用失败，仍然允许评论以避免误判
+			console.warn('Failed to check user blocking status:', error);
+		}
 	}
 
 	const data = {
